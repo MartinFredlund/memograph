@@ -1,0 +1,52 @@
+services:
+  neo4j:
+    image: neo4j:5-community
+    restart: unless-stopped
+    environment:
+      - NEO4J_AUTH=${NEO4J_AUTH}
+    ports:
+      - "7474:7474" # Browser UI (dev only — Remove in production)
+      - "7687:7687" # Bolt protocol (how the backend talks to Neo4j)
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD", "neo4j", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000" # S3 API (backend connects here)
+      - "9001:9001" # Web console (dev only — manage buckets, view files)
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  traefik:
+    image: traefik:v3.0
+    restart: unless-stopped
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80" # Main entry point (all traffic)
+      - "8080:8080" # Traefik dashboard (dev only)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  neo4j_data:
+  minio_data:
