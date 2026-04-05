@@ -47,6 +47,27 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      - NEO4J_URI=${NEO4J_URI}
+      - NEO4J_AUTH=${NEO4J_AUTH}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_BUCKET=${MINIO_BUCKET}
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    ports:
+      - "8000:8000"
+    depends_on:
+      neo4j:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
 volumes:
   neo4j_data:
   minio_data:
