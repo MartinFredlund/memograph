@@ -89,28 +89,30 @@ graphweb/
 
 ### Nodes
 
-**`:Person`** — `uid`, `name`, `birth_date?`, `description?`, `created_at`, `updated_at`
+**`:Person`** — `uid`, `name`, `birth_date?`, `death_date?`, `gender?`, `nickname?`, `description?`, `created_at`, `updated_at`
 **`:Event`** — `uid`, `name`, `date?`, `end_date?`, `description?`, `created_at`, `updated_at`
 **`:Place`** — `uid`, `name`, `address?`, `latitude?`, `longitude?`, `description?`, `created_at`, `updated_at`
-**`:Image`** — `uid`, `filename`, `object_key`, `content_type`, `size_bytes`, `taken_date?`, `caption?`, `uploaded_at`
-**`:User`** — `uid`, `username`, `email`, `hashed_password`, `role`, `created_at`
+**`:Image`** — `uid`, `filename`, `object_key`, `content_type`, `size_bytes`, `width?`, `height?`, `taken_date?`, `caption?`, `uploaded_at`
+**`:User`** — `uid`, `username`, `hashed_password`, `role`, `is_active`, `created_at`, `updated_at`
 - Each User is linked to a Person node via `(:User)-[:IS_PERSON]->(:Person)`
 - Most users represent themselves in the graph; their Person node is the anchor for their viewpoint
 - A Person can exist without a User account (most people in the graph won't have logins)
 - When a new User registers, they can link to an existing Person or create one
 
-### Relationships (Minimal Base Types + Traversal)
+### Relationships (Fixed Family + Flexible Social)
 
-Only 5 base relationship types are stored. All derived relationships (grandparent, sibling, cousin, in-law, etc.) are computed via graph traversal — no redundant data that can go stale.
+Family relationships are fixed types — graph traversal depends on them. Social relationships use a single `SOCIAL` type with a user-defined `type` property, allowing custom relationship kinds.
 
-**Stored types** (Person → Person):
+**Family types** (Person → Person, fixed):
 | Type | Meaning | Properties |
 |------|---------|------------|
 | `PARENT_OF` | Direct parent→child. Derives grandparent (2 hops), sibling (shared parent), cousin, uncle/aunt, etc. | `since?` |
 | `SPOUSE_OF` | Marriage/partnership. Derives in-laws via traversal. | `since?` |
-| `FRIEND_OF` | Social connection | `since?`, `context?` |
-| `COLLEAGUE_OF` | Work relationship | `since?`, `context?` |
-| `NEIGHBOR_OF` | Proximity | `since?`, `context?` |
+
+**Social type** (Person → Person, flexible):
+| Type | Meaning | Properties |
+|------|---------|------------|
+| `SOCIAL` | Any social connection. Defaults: "friend", "colleague", "neighbor". Users can add custom types (e.g., "godparent", "mentor", "roommate"). | `type`, `since?`, `context?` |
 
 **Derived relationship examples** (computed by Cypher queries, not stored):
 - Grandparent: `(gp)-[:PARENT_OF]->(p)-[:PARENT_OF]->(person)`
@@ -122,11 +124,13 @@ Only 5 base relationship types are stored. All derived relationships (grandparen
 - `IS_PERSON` (User → Person) — links a login account to their representation in the graph
 
 **Image associations:**
+- `UPLOADED_BY` (Image → User) — tracks who uploaded the image
 - `APPEARS_IN` (Person → Image) — **with `tag_x` and `tag_y` (float, 0-100%)** for click-to-tag position
 - `TAKEN_AT` (Image → Place)
 - `FROM_EVENT` (Image → Event)
 
 **Entity cross-references:**
+- `BORN_AT` (Person → Place) — optional birth location
 - `ATTENDED` (Person → Event)
 - `HELD_AT` (Event → Place)
 - `LIVES_AT` (Person → Place) — properties: `since?`
@@ -272,6 +276,8 @@ Internet → Cloudflare (SSL, DDoS, caching)
 - Family tree layout (hierarchical Cytoscape.js or d3-dag)
 - Data export (JSON, CSV)
 - Refresh tokens
+- `PROFILE_IMAGE` relationship (Person → Image) — dedicated profile picture per person
+- `COVER_IMAGE` relationship (Event → Image) — dedicated cover image per event
 
 ## Verification
 1. `make up` → all 5 containers healthy
