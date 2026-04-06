@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.config import get_settings
-from app.db import neo4j_driver, minio_client
+from app.db import neo4j_driver, minio_client, seed
 from app.health.router import router as health_router
 
 
@@ -17,6 +17,7 @@ async def lifespan(app: FastAPI):
         settings.MINIO_ROOT_PASSWORD,
         settings.MINIO_BUCKET,
     )
+    seed.run_seed(neo4j_driver.get_driver(), settings)
     yield
     neo4j_driver.close()
 

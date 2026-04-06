@@ -222,10 +222,10 @@ Internet → Cloudflare (SSL, DDoS, caching)
 ## Implementation Order
 
 ### Phase 1: Foundation
-1. Init monorepo, `.gitignore`, `Makefile`
-2. `docker-compose.yml` — neo4j + minio + traefik
-3. FastAPI skeleton: health endpoint, config, Neo4j driver lifespan, MinIO client
-4. DB seed script (constraints, indexes, default admin user)
+1. [x] Init monorepo, `.gitignore`, `Makefile`
+2. [x] `docker-compose.yml` — neo4j + minio + traefik
+3. [x] FastAPI skeleton: health endpoint, config, Neo4j driver lifespan, MinIO client
+4. [x] DB seed script (constraints, indexes, default admin user)
 5. Auth module (register, login, JWT, RBAC)
 
 ### Phase 2: People & Relationships
@@ -261,11 +261,12 @@ Internet → Cloudflare (SSL, DDoS, caching)
 12. Events/Places pages (simple list views)
 13. AdminPage for user management
 
-### Phase 6: CI/CD & Polish
+### Phase 6: CI/CD, Backup & Polish
 1. GitHub Actions CI (lint + test backend, lint + build frontend)
 2. GitHub Actions CD (build + push Docker images to GHCR)
 3. Frontend Dockerfile (multi-stage with nginx)
 4. Image thumbnails for gallery performance
+5. Backup script — Neo4j dump (`neo4j-admin database dump`) + MinIO data tar, scheduled via cron, with rolling retention (e.g., 30 daily). Off-site destination TBD (external drive, Backblaze B2, rsync to another machine).
 
 ## Post-MVP Ideas
 - Duplicate image detection (perceptual hashing to catch near-duplicates, not just exact matches)
