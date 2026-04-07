@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     JWT_SECRET: str
     ADMIN_USERNAME: str
     ADMIN_PASSWORD: str
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRY_MINUTES: int = 120
 
 
 @lru_cache
