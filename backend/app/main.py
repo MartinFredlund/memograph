@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from app.config import get_settings
 from app.db import neo4j_driver, minio_client, seed
 from app.health.router import router as health_router
+from app.auth.router import router as auth_router
 
 
 @asynccontextmanager
@@ -24,3 +25,4 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Memograph", lifespan=lifespan)
 app.include_router(health_router)
+app.include_router(auth_router)

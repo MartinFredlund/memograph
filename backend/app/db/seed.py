@@ -1,8 +1,8 @@
 import uuid
 
-import bcrypt
 from neo4j import Driver
 
+from app.auth.service import hash_password
 from app.config import Settings
 
 
@@ -35,7 +35,5 @@ def run_seed(neo4j_driver: Driver, settings: Settings):
                 admin_query,
                 uid=str(uuid.uuid4()),
                 admin_username=settings.ADMIN_USERNAME,
-                admin_password=bcrypt.hashpw(
-                    settings.ADMIN_PASSWORD.encode(), bcrypt.gensalt()
-                ).decode(),
+                admin_password=hash_password(settings.ADMIN_PASSWORD),
             )
