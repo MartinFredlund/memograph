@@ -229,17 +229,20 @@ Internet → Cloudflare (SSL, DDoS, caching)
 5. [x] Auth module (register, login, JWT, RBAC)
 
 ### Phase 2: People & Relationships
-1. Person CRUD (schemas, service with Cypher, router)
+1. [x] Person CRUD (schemas, service with Cypher, router)
 2. Relationship CRUD with predefined family/social types
 3. Events and Places CRUD (simpler, same pattern)
 4. Backend tests
 
 ### Phase 3: Image Upload & Tagging
 1. MinIO storage wrapper (upload, presigned URL, delete, thumbnail generation)
-2. Image upload endpoint (multipart → MinIO + Image node in Neo4j)
-3. Face-tag endpoint: `POST /api/images/{uid}/tags` — saves `APPEARS_IN` with coordinates
-4. Image association endpoints: link to event/place
-5. Image list/search endpoint with filters
+2. Bulk image upload endpoint (multipart → MinIO + Image nodes in Neo4j, returns list of created image UIDs)
+3. Image rotate/delete endpoints (basic image management during review)
+4. Face-tag endpoint: `POST /api/images/{uid}/tags` — saves `APPEARS_IN` with coordinates
+5. Remove face-tag endpoint: `DELETE /api/images/{uid}/tags/{person_uid}`
+6. Image association endpoints: link to event/place
+7. Image download endpoint (presigned URL with `Content-Disposition: attachment`)
+8. Image list/search endpoint with filters
 
 ### Phase 4: Graph API
 1. Graph exploration query (Cytoscape-formatted JSON)
@@ -252,8 +255,8 @@ Internet → Cloudflare (SSL, DDoS, caching)
 3. Auth context + login page
 4. AppLayout with sidebar navigation + routing
 5. **GalleryPage** — image grid with filters (this is the main page)
-6. **UploadPage** — drag-and-drop upload
-7. **ImageDetailPage** — full image view with FaceTagger overlay + metadata
+6. **UploadPage** — bulk drag-and-drop upload → post-upload review flow (step through each image: tag people, rotate, add metadata, delete unwanted, skip)
+7. **ImageDetailPage** — full image view with FaceTagger overlay + metadata (also used as the review step UI)
 8. **FaceTagger component** — click-to-tag with person search popover
 9. **PersonPage** — profile with photos tab, relationships tab, mini graph
 10. **PeoplePage** — searchable list of all people
@@ -279,6 +282,8 @@ Internet → Cloudflare (SSL, DDoS, caching)
 - Refresh tokens
 - `PROFILE_IMAGE` relationship (Person → Image) — dedicated profile picture per person
 - `COVER_IMAGE` relationship (Event → Image) — dedicated cover image per event
+- Safe delete for Person/Event/Place nodes (relationship checks, soft-delete, confirmation)
+- Video support (chunked upload, `:Video` or `:Media` node, ffmpeg thumbnails, `APPEARS_IN` without coordinates — people linked to videos but no spatial face tagging)
 
 ## Verification
 1. `make up` → all 5 containers healthy

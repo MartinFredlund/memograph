@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException
 from neo4j import Session
 
-from app.auth.schemas import TokenPayload
+from app.auth.schemas import TokenPayload, UserRole
 from app.auth.service import decode_access_token
 from app.db.neo4j_driver import get_driver
 
@@ -21,3 +21,11 @@ def get_db_session() -> Session:
     driver = get_driver()
     with driver.session() as session:
         yield session
+
+
+def require_editor(
+    current_user: TokenPayload = Depends(get_current_user),
+) -> TokenPayload:
+    if current_user.role not in {UserRole.ADMIN, UserRole.EDITOR}:
+        raise HTTPException(status_code=403, detail="Invalid user role for action")
+    return current_user
