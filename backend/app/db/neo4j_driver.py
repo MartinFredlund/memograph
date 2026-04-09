@@ -1,12 +1,13 @@
 from neo4j import GraphDatabase, Driver
+from pydantic import SecretStr
 
 # Module-level variable to hold the driver
 _driver: Driver | None = None
 
 
-def connect(uri: str, auth: str) -> None:
+def connect(uri: str, auth: SecretStr) -> None:
     global _driver
-    username, password = auth.split("/", 1)
+    username, password = auth.get_secret_value().split("/", 1)
     _driver = GraphDatabase.driver(uri, auth=(username, password))
     _driver.verify_connectivity()
 

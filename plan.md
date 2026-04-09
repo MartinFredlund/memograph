@@ -226,7 +226,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 2. [x] `docker-compose.yml` — neo4j + minio + traefik
 3. [x] FastAPI skeleton: health endpoint, config, Neo4j driver lifespan, MinIO client
 4. [x] DB seed script (constraints, indexes, default admin user)
-5. Auth module (register, login, JWT, RBAC)
+5. [x] Auth module (register, login, JWT, RBAC)
 
 ### Phase 2: People & Relationships
 1. Person CRUD (schemas, service with Cypher, router)

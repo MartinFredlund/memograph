@@ -20,7 +20,7 @@ def run_seed(neo4j_driver: Driver, settings: Settings):
         for query in constraint_queries:
             session.run(query)
 
-        if settings.ADMIN_USERNAME and settings.ADMIN_PASSWORD:
+        if settings.ADMIN_USERNAME and settings.ADMIN_PASSWORD.get_secret_value():
             admin_query = """
                 MERGE (a:User {username: $admin_username})
                 ON CREATE SET
@@ -35,5 +35,7 @@ def run_seed(neo4j_driver: Driver, settings: Settings):
                 admin_query,
                 uid=str(uuid.uuid4()),
                 admin_username=settings.ADMIN_USERNAME,
-                admin_password=hash_password(settings.ADMIN_PASSWORD),
+                admin_password=hash_password(
+                    settings.ADMIN_PASSWORD.get_secret_value()
+                ),
             )
