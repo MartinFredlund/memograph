@@ -1,5 +1,6 @@
 from datetime import date, datetime, timezone
 from pydantic import BaseModel, ConfigDict, field_validator
+from neo4j.time import Date as Neo4jDate
 
 
 class PersonCreate(BaseModel):
@@ -38,4 +39,11 @@ class PersonResponse(BaseModel):
     def ms_to_datetime(cls, v):
         if isinstance(v, int):
             return datetime.fromtimestamp(v / 1000, tz=timezone.utc)
+        return v
+
+    @field_validator("birth_date", "death_date", mode="before")
+    @classmethod
+    def neo4j_date_to_date(cls, v):
+        if isinstance(v, Neo4jDate):
+            return v.to_native()
         return v

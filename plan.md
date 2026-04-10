@@ -232,7 +232,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 1. [x] Person CRUD (schemas, service with Cypher, router)
 2. [x] Relationship CRUD with predefined family/social types
 3. [x] Events and Places CRUD (simpler, same pattern)
-4. Backend tests
+4. [x] Backend tests
 
 ### Phase 3: Image Upload & Tagging
 1. MinIO storage wrapper (upload, presigned URL, delete, thumbnail generation)

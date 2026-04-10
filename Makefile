@@ -29,5 +29,13 @@ shell:
 clean: down
 	docker compose down -v
 
+# Run backend tests (requires Docker for the Neo4j test container)
+test:
+	cd backend && uv run pytest tests/ -v
+
+# Run backend tests with coverage report
+test-cov:
+	cd backend && uv run pytest tests/ --cov=app --cov-report=term-missing
+
 # Declare these as commands, not files
-.PHONY: up dev down restart logs logs-service shell clean
+.PHONY: up dev down restart logs logs-service shell clean test test-cov

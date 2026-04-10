@@ -1,6 +1,7 @@
 from datetime import date
 from enum import Enum
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, field_validator, model_validator
+from neo4j.time import Date as Neo4jDate
 
 
 class Category(str, Enum):
@@ -37,3 +38,10 @@ class RelationshipResponse(BaseModel):
     since: date | None = None
     context: str | None = None
     social_type: str | None = None
+
+    @field_validator("since", mode="before")
+    @classmethod
+    def neo4j_date_to_date(cls, v):
+        if isinstance(v, Neo4jDate):
+            return v.to_native()
+        return v
