@@ -7,6 +7,7 @@ from app.db import neo4j_driver, minio_client, seed
 from app.health.router import router as health_router
 from app.auth.router import router as auth_router
 from app.people.router import router as people_router
+from app.relationships.router import router as relationships_rouer
 
 
 @asynccontextmanager
@@ -28,3 +29,4 @@ app = FastAPI(title="Memograph", lifespan=lifespan)
 app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(people_router)
+app.include_router(relationships_rouer)

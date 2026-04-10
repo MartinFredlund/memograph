@@ -107,7 +107,7 @@ Family relationships are fixed types — graph traversal depends on them. Social
 | Type | Meaning | Properties |
 |------|---------|------------|
 | `PARENT_OF` | Direct parent→child. Derives grandparent (2 hops), sibling (shared parent), cousin, uncle/aunt, etc. | `since?` |
-| `SPOUSE_OF` | Marriage/partnership. Derives in-laws via traversal. | `since?` |
+| `PARTNER_OF` | Marriage/partnership. Derives in-laws via traversal. | `since?` |
 
 **Social type** (Person → Person, flexible):
 | Type | Meaning | Properties |
@@ -118,7 +118,7 @@ Family relationships are fixed types — graph traversal depends on them. Social
 - Grandparent: `(gp)-[:PARENT_OF]->(p)-[:PARENT_OF]->(person)`
 - Sibling: `(person)<-[:PARENT_OF]-(parent)-[:PARENT_OF]->(sibling)`
 - Cousin: `(person)<-[:PARENT_OF]-(p1)<-[:PARENT_OF]-(gp)-[:PARENT_OF]->(p2)-[:PARENT_OF]->(cousin)`
-- In-law: traverse through `SPOUSE_OF` + `PARENT_OF` combinations
+- In-law: traverse through `PARTNER_OF` + `PARENT_OF` combinations
 
 **User-Person link:**
 - `IS_PERSON` (User → Person) — links a login account to their representation in the graph
@@ -230,7 +230,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 
 ### Phase 2: People & Relationships
 1. [x] Person CRUD (schemas, service with Cypher, router)
-2. Relationship CRUD with predefined family/social types
+2. [x] Relationship CRUD with predefined family/social types
 3. Events and Places CRUD (simpler, same pattern)
 4. Backend tests
 
