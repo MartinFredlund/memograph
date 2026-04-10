@@ -90,7 +90,7 @@ graphweb/
 ### Nodes
 
 **`:Person`** — `uid`, `name`, `birth_date?`, `death_date?`, `gender?`, `nickname?`, `description?`, `created_at`, `updated_at`
-**`:Event`** — `uid`, `name`, `date?`, `end_date?`, `description?`, `created_at`, `updated_at`
+**`:Event`** — `uid`, `name`, `start_date?`, `end_date?`, `description?`, `created_at`, `updated_at`
 **`:Place`** — `uid`, `name`, `address?`, `latitude?`, `longitude?`, `description?`, `created_at`, `updated_at`
 **`:Image`** — `uid`, `filename`, `object_key`, `content_type`, `size_bytes`, `width?`, `height?`, `taken_date?`, `caption?`, `uploaded_at`
 **`:User`** — `uid`, `username`, `hashed_password`, `role`, `is_active`, `created_at`, `updated_at`
@@ -231,7 +231,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 ### Phase 2: People & Relationships
 1. [x] Person CRUD (schemas, service with Cypher, router)
 2. [x] Relationship CRUD with predefined family/social types
-3. Events and Places CRUD (simpler, same pattern)
+3. [x] Events and Places CRUD (simpler, same pattern)
 4. Backend tests
 
 ### Phase 3: Image Upload & Tagging
