@@ -235,8 +235,8 @@ Internet → Cloudflare (SSL, DDoS, caching)
 4. [x] Backend tests
 
 ### Phase 3: Image Upload & Tagging
-1. MinIO storage wrapper (upload, presigned URL, delete, thumbnail generation)
-2. Bulk image upload endpoint (multipart → MinIO + Image nodes in Neo4j, returns list of created image UIDs)
+1. [x] MinIO storage wrapper (upload, presigned URL, delete — thumbnail generation deferred to Phase 6)
+2. [x] Bulk image upload endpoint (multipart → MinIO + Image nodes in Neo4j, returns list of created image UIDs)
 3. Image rotate/delete endpoints (basic image management during review)
 4. Face-tag endpoint: `POST /api/images/{uid}/tags` — saves `APPEARS_IN` with coordinates
 5. Remove face-tag endpoint: `DELETE /api/images/{uid}/tags/{person_uid}`
@@ -284,6 +284,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 - `COVER_IMAGE` relationship (Event → Image) — dedicated cover image per event
 - Safe delete for Person/Event/Place nodes (relationship checks, soft-delete, confirmation)
 - Video support (chunked upload, `:Video` or `:Media` node, ffmpeg thumbnails, `APPEARS_IN` without coordinates — people linked to videos but no spatial face tagging)
+- MinIO/Neo4j orphan reconciliation: if Cypher fails after a successful MinIO upload, the object is left dangling. Add a background job or two-phase cleanup to detect and remove orphans.
 
 ## Verification
 1. `make up` → all 5 containers healthy
