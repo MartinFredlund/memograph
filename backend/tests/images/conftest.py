@@ -67,6 +67,23 @@ def make_test_image(width: int = 100, height: int = 50, fmt: str = "JPEG") -> by
     return buf.getvalue()
 
 
+def make_jpeg_with_orientation(
+    width: int = 100, height: int = 50, orientation: int = 6
+) -> bytes:
+    """JPEG carrying an explicit EXIF Orientation tag.
+
+    Orientation 6 means 'rotate 90° CW when displaying' — mimics what a
+    phone emits when the user holds it in portrait. Used to regression-test
+    that rotate_image normalizes orientation instead of double-rotating.
+    """
+    img = PILImage.new("RGB", (width, height), color="red")
+    exif = img.getexif()
+    exif[274] = orientation  # 274 == EXIF Orientation tag (0x0112)
+    buf = BytesIO()
+    img.save(buf, format="JPEG", exif=exif.tobytes())
+    return buf.getvalue()
+
+
 @pytest.fixture
 def seeded_image(db_session, fake_storage, editor_user) -> dict:
     """An image uploaded by `editor_user`, planted directly via the service.
@@ -78,5 +95,17 @@ def seeded_image(db_session, fake_storage, editor_user) -> dict:
         uploader_uid=editor_user["uid"],
         filename="test.jpg",
         content=make_test_image(),
+        content_type="image/jpeg",
+    )
+
+
+@pytest.fixture
+def seeded_oriented_image(db_session, fake_storage, editor_user) -> dict:
+    """An image whose EXIF Orientation is 6 (rotate-90-CW-on-display)."""
+    return image_service.create_image(
+        session=db_session,
+        uploader_uid=editor_user["uid"],
+        filename="oriented.jpg",
+        content=make_jpeg_with_orientation(),
         content_type="image/jpeg",
     )

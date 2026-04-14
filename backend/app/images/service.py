@@ -4,7 +4,7 @@ from typing import Any
 from uuid import uuid4
 
 from neo4j import Session
-from PIL import Image
+from PIL import Image, ImageOps
 
 from app.auth.schemas import TokenPayload, UserRole
 from app.images import storage
@@ -72,10 +72,12 @@ def rotate_image(session: Session, uid: str, degrees: int) -> dict | None:
         return None
     data = storage.download(record["object_key"])
     img = Image.open(BytesIO(data))
+    original_format = img.format
+    img = ImageOps.exif_transpose(img)
     rotated = img.transpose(ROTATION_MAP[degrees])
     buf = BytesIO()
-    save_kwargs: dict[str, Any] = {"format": img.format}
-    if img.format == "JPEG":
+    save_kwargs: dict[str, Any] = {"format": original_format}
+    if original_format == "JPEG":
         save_kwargs["quality"] = 95
         exif = img.info.get("exif")
         if exif:

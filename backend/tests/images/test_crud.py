@@ -58,6 +58,32 @@ async def test_rotate_rejects_invalid_degrees(client, seeded_image, editor_user)
     assert response.status_code == 422
 
 
+async def test_rotate_normalizes_exif_orientation(
+    client, seeded_oriented_image, editor_user, fake_storage
+):
+    """Regression: rotating a photo with an EXIF Orientation tag must not
+    leave the tag intact, or EXIF-respecting viewers will double-rotate.
+
+    Also covers the subtler format-loss bug: when ImageOps.exif_transpose
+    physically rotates pixels, the returned image's `.format` attribute is
+    dropped. Without capturing the original format before that call, the
+    save step fails with 'unknown file extension'.
+    """
+    response = await client.post(
+        f"/api/images/{seeded_oriented_image['uid']}/rotate",
+        json={"degrees": 90},
+        headers={"Authorization": f"Bearer {editor_user['token']}"},
+    )
+
+    assert response.status_code == 200
+    stored = fake_storage[seeded_oriented_image["object_key"]]
+    reloaded = PILImage.open(BytesIO(stored))
+    orientation = reloaded.getexif().get(274, 1)
+    assert orientation == 1, (
+        f"Orientation should be normalized to 1, got {orientation}"
+    )
+
+
 # --- Delete ---
 
 
