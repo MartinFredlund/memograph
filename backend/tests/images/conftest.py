@@ -8,6 +8,8 @@ from app.auth.schemas import UserRole
 from app.auth.service import create_access_token, create_user
 from app.images import service as image_service
 from app.images import storage as storage_module
+from app.people.schemas import PersonCreate
+from app.people.service import create_person
 
 
 @pytest.fixture
@@ -109,3 +111,9 @@ def seeded_oriented_image(db_session, fake_storage, editor_user) -> dict:
         content=make_jpeg_with_orientation(),
         content_type="image/jpeg",
     )
+
+
+@pytest.fixture
+def seeded_person(db_session) -> dict:
+    """A bare Person node to point face-tag relationships at."""
+    return create_person(db_session, PersonCreate(name="Alice Example"))

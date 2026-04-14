@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ImageRotate(BaseModel):
@@ -24,3 +24,16 @@ class ImageResponse(BaseModel):
         if isinstance(v, int):
             return datetime.fromtimestamp(v / 1000, tz=timezone.utc)
         return v
+
+
+class TagCreate(BaseModel):
+    person_uid: str
+    tag_x: float = Field(ge=0, le=100)
+    tag_y: float = Field(ge=0, le=100)
+
+
+class TagResponse(BaseModel):
+    person_uid: str
+    person_name: str
+    tag_x: float
+    tag_y: float

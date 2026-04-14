@@ -16,6 +16,12 @@ ROTATION_MAP = {
 }
 
 
+class TagResult(str, Enum):
+    OK = "ok"
+    IMAGE_NOT_FOUND = "image_not_found"
+    PERSON_NOT_FOUND = "person_not_found"
+
+
 class DeleteResult(str, Enum):
     OK = "ok"
     NOT_FOUND = "not_found"
@@ -115,3 +121,41 @@ def delete_image(
     session.run("MATCH (i:Image {uid: $uid}) DETACH DELETE i", uid=uid)
     storage.delete(record["object_key"])
     return DeleteResult.OK
+
+
+def add_tag(
+    session: Session,
+    image_uid: str,
+    person_uid: str,
+    tag_x: float,
+    tag_y: float,
+) -> tuple[TagResult, dict | None]:
+    image_result = session.run(
+        "MATCH (i:Image {uid: $image_uid}) RETURN 1", image_uid=image_uid
+    )
+    image_record = image_result.single()
+    if image_record is None:
+        return (TagResult.IMAGE_NOT_FOUND, None)
+    person_result = session.run(
+        "MATCH (p:Person {uid: $person_uid}) RETURN p.name AS name",
+        person_uid=person_uid,
+    )
+    person_record = person_result.single()
+    if person_record is None:
+        return (TagResult.PERSON_NOT_FOUND, None)
+    session.run(
+        "MATCH (i:Image {uid: $image_uid}), (p:Person {uid: $person_uid}) MERGE (p)-[r:APPEARS_IN]->(i) SET r.tag_x = $tag_x, r.tag_y = $tag_y",
+        image_uid=image_uid,
+        person_uid=person_uid,
+        tag_x=tag_x,
+        tag_y=tag_y,
+    )
+    return (
+        TagResult.OK,
+        {
+            "person_uid": person_uid,
+            "person_name": person_record["name"],
+            "tag_x": tag_x,
+            "tag_y": tag_y,
+        },
+    )

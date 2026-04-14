@@ -3,8 +3,15 @@ from neo4j import Session
 
 from app.auth.schemas import TokenPayload
 from app.dependencies import get_db_session, require_editor
-from app.images.schemas import ImageResponse, ImageRotate
-from app.images.service import DeleteResult, create_image, delete_image, rotate_image
+from app.images.schemas import ImageResponse, ImageRotate, TagCreate, TagResponse
+from app.images.service import (
+    DeleteResult,
+    TagResult,
+    add_tag,
+    create_image,
+    delete_image,
+    rotate_image,
+)
 
 router = APIRouter(prefix="/api/images", tags=["images"])
 
@@ -55,3 +62,18 @@ def delete(
         raise HTTPException(
             status_code=403, detail="You can only delete your own uploads"
         )
+
+
+@router.post("/{uid}/tags", status_code=201)
+def add_tag_endpoint(
+    uid: str,
+    data: TagCreate,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(require_editor),
+) -> TagResponse:
+    result, payload = add_tag(session, uid, data.person_uid, data.tag_x, data.tag_y)
+    if result == TagResult.IMAGE_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Image not found")
+    if result == TagResult.PERSON_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Person not found")
+    return TagResponse(**payload)
