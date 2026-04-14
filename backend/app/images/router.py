@@ -1,12 +1,25 @@
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from neo4j import Session
 
+from app.auth.schemas import TokenPayload
 from app.dependencies import get_db_session, require_editor
-from app.images.schemas import ImageResponse
-from app.images.service import create_image
-
+from app.images.schemas import ImageResponse, ImageRotate
+from app.images.service import DeleteResult, create_image, delete_image, rotate_image
 
 router = APIRouter(prefix="/api/images", tags=["images"])
+
+
+@router.post("/{uid}/rotate")
+def rotate(
+    uid: str,
+    data: ImageRotate,
+    session: Session = Depends(get_db_session),
+    current_user=Depends(require_editor),
+) -> ImageResponse:
+    image = rotate_image(session, uid, data.degrees)
+    if image is None:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return ImageResponse(**image)
 
 
 @router.post("/", status_code=201)
@@ -27,3 +40,18 @@ async def upload(
         )
         created.append(ImageResponse(**image))
     return created
+
+
+@router.delete("/{uid}", status_code=204)
+def delete(
+    uid: str,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(require_editor),
+) -> None:
+    result = delete_image(session, uid, current_user)
+    if result == DeleteResult.NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Image not found")
+    if result == DeleteResult.FORBIDDEN:
+        raise HTTPException(
+            status_code=403, detail="You can only delete your own uploads"
+        )

@@ -237,7 +237,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 ### Phase 3: Image Upload & Tagging
 1. [x] MinIO storage wrapper (upload, presigned URL, delete — thumbnail generation deferred to Phase 6)
 2. [x] Bulk image upload endpoint (multipart → MinIO + Image nodes in Neo4j, returns list of created image UIDs)
-3. Image rotate/delete endpoints (basic image management during review)
+3. [x] Image rotate/delete endpoints (basic image management during review)
 4. Face-tag endpoint: `POST /api/images/{uid}/tags` — saves `APPEARS_IN` with coordinates
 5. Remove face-tag endpoint: `DELETE /api/images/{uid}/tags/{person_uid}`
 6. Image association endpoints: link to event/place

@@ -1,6 +1,8 @@
 from datetime import timedelta
 from io import BytesIO
+
 from minio.error import S3Error
+
 from app.config import get_settings
 from app.db.minio_client import get_client
 
@@ -16,6 +18,19 @@ def upload(object_key: str, data: bytes, content_type: str) -> None:
         length=len(data),
         content_type=content_type,
     )
+
+
+def download(object_key: str) -> bytes:
+    """Fetch an object's raw bytes from the bucket."""
+    client = get_client()
+    bucket = get_settings().MINIO_BUCKET
+    response = client.get_object(bucket_name=bucket, object_name=object_key)
+
+    try:
+        return response.read()
+    finally:
+        response.close()
+        response.release_conn()
 
 
 def presigned_url(object_key: str, expires_minutes: int = 60) -> str:

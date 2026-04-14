@@ -1,7 +1,25 @@
+from enum import Enum
+from io import BytesIO
+from typing import Any
 from uuid import uuid4
-from neo4j import Session
 
+from neo4j import Session
+from PIL import Image
+
+from app.auth.schemas import TokenPayload, UserRole
 from app.images import storage
+
+ROTATION_MAP = {
+    90: Image.Transpose.ROTATE_90,
+    180: Image.Transpose.ROTATE_180,
+    270: Image.Transpose.ROTATE_270,
+}
+
+
+class DeleteResult(str, Enum):
+    OK = "ok"
+    NOT_FOUND = "not_found"
+    FORBIDDEN = "forbidden"
 
 
 def create_image(
@@ -40,3 +58,58 @@ def create_image(
     )
     record = result.single()
     return dict(record["i"])
+
+
+def rotate_image(session: Session, uid: str, degrees: int) -> dict | None:
+    """Rotate the image in place (overwrites object in storage, updates size_bytes)."""
+    query = """
+        MATCH (i:Image {uid: $uid})
+        RETURN i.object_key AS object_key, i.content_type AS content_type
+    """
+    result = session.run(query, uid=uid)
+    record = result.single()
+    if record is None:
+        return None
+    data = storage.download(record["object_key"])
+    img = Image.open(BytesIO(data))
+    rotated = img.transpose(ROTATION_MAP[degrees])
+    buf = BytesIO()
+    save_kwargs: dict[str, Any] = {"format": img.format}
+    if img.format == "JPEG":
+        save_kwargs["quality"] = 95
+        exif = img.info.get("exif")
+        if exif:
+            save_kwargs["exif"] = exif
+    rotated.save(buf, **save_kwargs)
+    new_bytes = buf.getvalue()
+    storage.upload(record["object_key"], new_bytes, record["content_type"])
+    update_result = session.run(
+        "MATCH (i:Image {uid: $uid}) SET i.size_bytes = $size_bytes RETURN i",
+        uid=uid,
+        size_bytes=len(new_bytes),
+    )
+    update = update_result.single()
+    return dict(update["i"]) if update else None
+
+
+def delete_image(
+    session: Session,
+    uid: str,
+    requester: TokenPayload,
+) -> DeleteResult:
+    result = session.run(
+        "MATCH (i:Image {uid: $uid})-[:UPLOADED_BY]->(u:User) RETURN i.object_key AS object_key, u.uid AS uploader_uid",
+        uid=uid,
+    )
+    record = result.single()
+    if record is None:
+        return DeleteResult.NOT_FOUND
+    is_admin = requester.role == UserRole.ADMIN
+    is_owner_editor = (
+        requester.role == UserRole.EDITOR and record["uploader_uid"] == requester.sub
+    )
+    if not (is_admin or is_owner_editor):
+        return DeleteResult.FORBIDDEN
+    session.run("MATCH (i:Image {uid: $uid}) DETACH DELETE i", uid=uid)
+    storage.delete(record["object_key"])
+    return DeleteResult.OK

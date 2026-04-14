@@ -1,5 +1,11 @@
 from datetime import datetime, timezone
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, field_validator
+
+
+class ImageRotate(BaseModel):
+    degrees: Literal[90, 180, 270]
 
 
 class ImageResponse(BaseModel):
