@@ -26,14 +26,22 @@ class ImageResponse(BaseModel):
         return v
 
 
-class TagCreate(BaseModel):
+class PersonTagCreate(BaseModel):
     person_uid: str
     tag_x: float = Field(ge=0, le=100)
     tag_y: float = Field(ge=0, le=100)
 
 
-class TagResponse(BaseModel):
+class PersonTagResponse(BaseModel):
     person_uid: str
     person_name: str
     tag_x: float
     tag_y: float
+
+
+class PlaceLink(BaseModel):
+    place_uid: str
+
+
+class EventLink(BaseModel):
+    event_uid: str

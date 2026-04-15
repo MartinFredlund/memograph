@@ -6,10 +6,14 @@ from PIL import Image as PILImage
 
 from app.auth.schemas import UserRole
 from app.auth.service import create_access_token, create_user
+from app.events.schemas import EventCreate
+from app.events.service import create_event
 from app.images import service as image_service
 from app.images import storage as storage_module
 from app.people.schemas import PersonCreate
 from app.people.service import create_person
+from app.places.schemas import PlaceCreate
+from app.places.service import create_place
 
 
 @pytest.fixture
@@ -117,3 +121,25 @@ def seeded_oriented_image(db_session, fake_storage, editor_user) -> dict:
 def seeded_person(db_session) -> dict:
     """A bare Person node to point face-tag relationships at."""
     return create_person(db_session, PersonCreate(name="Alice Example"))
+
+
+@pytest.fixture
+def seeded_place(db_session) -> dict:
+    return create_place(db_session, PlaceCreate(name="Grandma's House"))
+
+
+@pytest.fixture
+def other_seeded_place(db_session) -> dict:
+    """Second place, used to verify the 'exactly one TAKEN_AT' invariant."""
+    return create_place(db_session, PlaceCreate(name="Beach House"))
+
+
+@pytest.fixture
+def seeded_event(db_session) -> dict:
+    return create_event(db_session, EventCreate(name="Christmas 2024"))
+
+
+@pytest.fixture
+def other_seeded_event(db_session) -> dict:
+    """Second event, used to verify the 'exactly one FROM_EVENT' invariant."""
+    return create_event(db_session, EventCreate(name="New Year's Eve 2024"))

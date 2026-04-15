@@ -1,17 +1,30 @@
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from neo4j import Session
 
 from app.auth.schemas import TokenPayload
 from app.dependencies import get_db_session, require_editor
-from app.images.schemas import ImageResponse, ImageRotate, TagCreate, TagResponse
+from app.images.schemas import (
+    EventLink,
+    ImageResponse,
+    ImageRotate,
+    PersonTagCreate,
+    PersonTagResponse,
+    PlaceLink,
+)
 from app.images.service import (
     DeleteResult,
+    EventResult,
+    PlaceResult,
     TagResult,
     add_tag,
     create_image,
     delete_image,
     remove_tag,
     rotate_image,
+    set_event,
+    set_place,
+    unset_event,
+    unset_place,
 )
 
 router = APIRouter(prefix="/api/images", tags=["images"])
@@ -22,7 +35,7 @@ def rotate(
     uid: str,
     data: ImageRotate,
     session: Session = Depends(get_db_session),
-    current_user=Depends(require_editor),
+    current_user: TokenPayload = Depends(require_editor),
 ) -> ImageResponse:
     image = rotate_image(session, uid, data.degrees)
     if image is None:
@@ -34,7 +47,7 @@ def rotate(
 async def upload(
     files: list[UploadFile] = File(...),
     session: Session = Depends(get_db_session),
-    current_user=Depends(require_editor),
+    current_user: TokenPayload = Depends(require_editor),
 ) -> list[ImageResponse]:
     created = []
     for file in files:
@@ -68,16 +81,16 @@ def delete(
 @router.post("/{uid}/tags", status_code=201)
 def add_tag_endpoint(
     uid: str,
-    data: TagCreate,
+    data: PersonTagCreate,
     session: Session = Depends(get_db_session),
     current_user: TokenPayload = Depends(require_editor),
-) -> TagResponse:
+) -> PersonTagResponse:
     result, payload = add_tag(session, uid, data.person_uid, data.tag_x, data.tag_y)
     if result == TagResult.IMAGE_NOT_FOUND:
         raise HTTPException(status_code=404, detail="Image not found")
     if result == TagResult.PERSON_NOT_FOUND:
         raise HTTPException(status_code=404, detail="Person not found")
-    return TagResponse(**payload)
+    return PersonTagResponse(**payload)
 
 
 @router.delete("/{uid}/tags/{person_uid}", status_code=204)
@@ -85,10 +98,60 @@ def remove_tag_endpoint(
     uid: str,
     person_uid: str,
     session: Session = Depends(get_db_session),
-    current_user=Depends(require_editor),
+    current_user: TokenPayload = Depends(require_editor),
 ) -> None:
     result = remove_tag(session, uid, person_uid)
     if result == TagResult.PERSON_NOT_FOUND:
         raise HTTPException(status_code=404, detail="Person not found")
     if result == TagResult.IMAGE_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+
+@router.put("/{uid}/place", status_code=204)
+def set_place_endpoint(
+    uid: str,
+    data: PlaceLink,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(require_editor),
+) -> None:
+    result = set_place(session, uid, data.place_uid)
+    if result == PlaceResult.PLACE_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Place not found")
+    if result == PlaceResult.IMAGE_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+
+@router.delete("/{uid}/place", status_code=204)
+def unset_place_endpoint(
+    uid: str,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(require_editor),
+) -> None:
+    result = unset_place(session, uid)
+    if result == PlaceResult.IMAGE_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+
+@router.put("/{uid}/event", status_code=204)
+def set_event_endpoint(
+    uid: str,
+    data: EventLink,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(require_editor),
+) -> None:
+    result = set_event(session, uid, data.event_uid)
+    if result == EventResult.IMAGE_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Image not found")
+    if result == EventResult.EVENT_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+
+@router.delete("/{uid}/event", status_code=204)
+def unset_event_endpoint(
+    uid: str,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(require_editor),
+) -> None:
+    result = unset_event(session, uid)
+    if result == EventResult.IMAGE_NOT_FOUND:
         raise HTTPException(status_code=404, detail="Image not found")

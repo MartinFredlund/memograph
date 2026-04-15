@@ -28,6 +28,18 @@ class DeleteResult(str, Enum):
     FORBIDDEN = "forbidden"
 
 
+class PlaceResult(str, Enum):
+    OK = "ok"
+    IMAGE_NOT_FOUND = "image_not_found"
+    PLACE_NOT_FOUND = "place_not_found"
+
+
+class EventResult(str, Enum):
+    OK = "ok"
+    IMAGE_NOT_FOUND = "image_not_found"
+    EVENT_NOT_FOUND = "event_not_found"
+
+
 def create_image(
     session: Session,
     uploader_uid: str,
@@ -180,3 +192,78 @@ def remove_tag(session: Session, image_uid: str, person_uid: str) -> TagResult:
         image_uid=image_uid,
     )
     return TagResult.OK
+
+
+def set_place(session: Session, image_uid: str, place_uid: str) -> PlaceResult:
+    image_result = session.run(
+        "MATCH (i:Image {uid: $image_uid}) RETURN 1", image_uid=image_uid
+    )
+    image_record = image_result.single()
+    if image_record is None:
+        return PlaceResult.IMAGE_NOT_FOUND
+    place_result = session.run(
+        "MATCH (p:Place {uid: $place_uid}) RETURN 1", place_uid=place_uid
+    )
+    place_record = place_result.single()
+    if place_record is None:
+        return PlaceResult.PLACE_NOT_FOUND
+    query = """
+        MATCH (i:Image {uid: $image_uid})
+        OPTIONAL MATCH (i)-[r:TAKEN_AT]->(:Place)
+        DELETE r
+        WITH i
+        MATCH (p:Place {uid: $place_uid})
+        CREATE (i)-[:TAKEN_AT]->(p)
+    """
+    session.run(query, image_uid=image_uid, place_uid=place_uid)
+    return PlaceResult.OK
+
+
+def unset_place(session: Session, image_uid: str) -> PlaceResult:
+    image_result = session.run(
+        "MATCH (i:Image {uid: $image_uid}) RETURN 1", image_uid=image_uid
+    )
+    image_record = image_result.single()
+    if image_record is None:
+        return PlaceResult.IMAGE_NOT_FOUND
+    session.run(
+        "OPTIONAL MATCH (:Image {uid: $image_uid}) - [r:TAKEN_AT] -> () DELETE r",
+        image_uid=image_uid,
+    )
+    return PlaceResult.OK
+
+
+def set_event(session: Session, image_uid: str, event_uid: str) -> EventResult:
+    image_result = session.run(
+        "MATCH (i:Image {uid: $image_uid}) RETURN 1", image_uid=image_uid
+    )
+    if image_result.single() is None:
+        return EventResult.IMAGE_NOT_FOUND
+    event_result = session.run(
+        "MATCH (e:Event {uid: $event_uid}) RETURN 1", event_uid=event_uid
+    )
+    if event_result.single() is None:
+        return EventResult.EVENT_NOT_FOUND
+    query = """
+        MATCH (i:Image {uid: $image_uid})
+        OPTIONAL MATCH (i)-[r:FROM_EVENT]->(:Event)
+        DELETE r
+        WITH i
+        MATCH (e:Event {uid: $event_uid})
+        CREATE (i)-[:FROM_EVENT]->(e)
+    """
+    session.run(query, image_uid=image_uid, event_uid=event_uid)
+    return EventResult.OK
+
+
+def unset_event(session: Session, image_uid: str) -> EventResult:
+    image_result = session.run(
+        "MATCH (i:Image {uid: $image_uid}) RETURN 1", image_uid=image_uid
+    )
+    if image_result.single() is None:
+        return EventResult.IMAGE_NOT_FOUND
+    session.run(
+        "OPTIONAL MATCH (:Image {uid: $image_uid})-[r:FROM_EVENT]->() DELETE r",
+        image_uid=image_uid,
+    )
+    return EventResult.OK
