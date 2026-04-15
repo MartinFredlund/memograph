@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from neo4j import Session
 
 from app.auth.schemas import TokenPayload
@@ -10,6 +10,7 @@ from app.images.service import (
     add_tag,
     create_image,
     delete_image,
+    remove_tag,
     rotate_image,
 )
 
@@ -77,3 +78,17 @@ def add_tag_endpoint(
     if result == TagResult.PERSON_NOT_FOUND:
         raise HTTPException(status_code=404, detail="Person not found")
     return TagResponse(**payload)
+
+
+@router.delete("/{uid}/tags/{person_uid}", status_code=204)
+def remove_tag_endpoint(
+    uid: str,
+    person_uid: str,
+    session: Session = Depends(get_db_session),
+    current_user=Depends(require_editor),
+) -> None:
+    result = remove_tag(session, uid, person_uid)
+    if result == TagResult.PERSON_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Person not found")
+    if result == TagResult.IMAGE_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Image not found")

@@ -239,7 +239,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 2. [x] Bulk image upload endpoint (multipart → MinIO + Image nodes in Neo4j, returns list of created image UIDs)
 3. [x] Image rotate/delete endpoints (basic image management during review)
 4. [x] Face-tag endpoint: `POST /api/images/{uid}/tags` — saves `APPEARS_IN` with coordinates
-5. Remove face-tag endpoint: `DELETE /api/images/{uid}/tags/{person_uid}`
+5. [x] Remove face-tag endpoint: `DELETE /api/images/{uid}/tags/{person_uid}`
 6. Image association endpoints: link to event/place
 7. Image download endpoint (presigned URL with `Content-Disposition: attachment`)
 8. Image list/search endpoint with filters

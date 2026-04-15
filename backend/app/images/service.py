@@ -159,3 +159,24 @@ def add_tag(
             "tag_y": tag_y,
         },
     )
+
+
+def remove_tag(session: Session, image_uid: str, person_uid: str) -> TagResult:
+    image_result = session.run(
+        "MATCH (i:Image {uid: $image_uid}) RETURN 1", image_uid=image_uid
+    )
+    image_record = image_result.single()
+    if image_record is None:
+        return TagResult.IMAGE_NOT_FOUND
+    person_result = session.run(
+        "MATCH (p:Person {uid: $person_uid}) RETURN 1", person_uid=person_uid
+    )
+    person_record = person_result.single()
+    if person_record is None:
+        return TagResult.PERSON_NOT_FOUND
+    session.run(
+        "MATCH (:Person {uid: $person_uid}) -[a:APPEARS_IN]->(:Image {uid: $image_uid}) DELETE a",
+        person_uid=person_uid,
+        image_uid=image_uid,
+    )
+    return TagResult.OK
