@@ -241,7 +241,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 4. [x] Face-tag endpoint: `POST /api/images/{uid}/tags` — saves `APPEARS_IN` with coordinates
 5. [x] Remove face-tag endpoint: `DELETE /api/images/{uid}/tags/{person_uid}`
 6. [x] Image association endpoints: link to event/place
-7. Image download endpoint (presigned URL with `Content-Disposition: attachment`)
+7. [x] Image download endpoint (presigned URL with `Content-Disposition: attachment`)
 8. Image list/search endpoint with filters
 
 ### Phase 4: Graph API

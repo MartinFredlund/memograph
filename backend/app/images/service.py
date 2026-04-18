@@ -267,3 +267,17 @@ def unset_event(session: Session, image_uid: str) -> EventResult:
         image_uid=image_uid,
     )
     return EventResult.OK
+
+
+def get_download_url(session: Session, uid: str) -> str | None:
+    result = session.run(
+        "MATCH (i:Image {uid: $image_uid}) RETURN i.object_key AS object_key, i.filename AS filename",
+        image_uid=uid,
+    )
+    record = result.single()
+    if record is None:
+        return None
+    filename = record["filename"] or "image"
+    return storage.presigned_url(
+        object_key=record["object_key"], expires_minutes=5, download_filename=filename
+    )

@@ -35,9 +35,23 @@ def fake_storage(monkeypatch):
     def fake_delete(object_key: str) -> None:
         store.pop(object_key, None)
 
+    def fake_presigned_url(
+        object_key: str,
+        expires_minutes: int = 60,
+        download_filename: str | None = None,
+    ) -> str:
+        """Deterministic stand-in for the real presigned URL. Encodes the
+        inputs as query params so tests can assert the service passed the
+        right object_key and filename through."""
+        url = f"https://fake-minio.test/{object_key}?expires={expires_minutes}"
+        if download_filename is not None:
+            url += f"&filename={download_filename}"
+        return url
+
     monkeypatch.setattr(storage_module, "upload", fake_upload)
     monkeypatch.setattr(storage_module, "download", fake_download)
     monkeypatch.setattr(storage_module, "delete", fake_delete)
+    monkeypatch.setattr(storage_module, "presigned_url", fake_presigned_url)
     return store
 
 

@@ -1,8 +1,15 @@
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    UploadFile,
+)
+from fastapi.responses import RedirectResponse
 from neo4j import Session
 
 from app.auth.schemas import TokenPayload
-from app.dependencies import get_db_session, require_editor
+from app.dependencies import get_db_session, require_editor, get_current_user
 from app.images.schemas import (
     EventLink,
     ImageResponse,
@@ -19,6 +26,7 @@ from app.images.service import (
     add_tag,
     create_image,
     delete_image,
+    get_download_url,
     remove_tag,
     rotate_image,
     set_event,
@@ -155,3 +163,15 @@ def unset_event_endpoint(
     result = unset_event(session, uid)
     if result == EventResult.IMAGE_NOT_FOUND:
         raise HTTPException(status_code=404, detail="Image not found")
+
+
+@router.get("/{uid}/download")
+def download_image(
+    uid: str,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(get_current_user),
+) -> RedirectResponse:
+    url = get_download_url(session, uid)
+    if url is None:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return RedirectResponse(url=url, status_code=302)
