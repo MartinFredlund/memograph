@@ -201,7 +201,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 - On the image detail page: all tags are visible and clickable (navigate to person)
 
 ### Gallery Page (main page)
-- Grid of image thumbnails, sorted by date (newest first)
+- Grid of image thumbnails, sorted by **upload date** (newest first)
 - Filter/search by: person name, event, place, date range
 - Clicking a thumbnail opens the image detail page
 
@@ -242,7 +242,15 @@ Internet → Cloudflare (SSL, DDoS, caching)
 5. [x] Remove face-tag endpoint: `DELETE /api/images/{uid}/tags/{person_uid}`
 6. [x] Image association endpoints: link to event/place
 7. [x] Image download endpoint (presigned URL with `Content-Disposition: attachment`)
-8. Image list/search endpoint with filters
+8. [x] Image list/search endpoint with filters — `GET /api/images`
+   - **Pagination**: cursor-based; response shape `{items, next_cursor}` where `next_cursor: null` signals end of stream
+   - **Cursor encoding**: opaque base64 string wrapping `{uploaded_at_ms: int, uid: str}` (raw ms int, not ISO — avoids precision drift)
+   - **Sort**: `uploaded_at DESC, uid DESC` (uid is the tiebreaker; the cursor encodes this sort and cannot diverge from it)
+   - **Filters**: optional `person_uid`, `event_uid`, `place_uid` — combined with AND. No name/free-text filters (frontend autocompletes name → uid)
+   - **Deferred**: reverse sort direction, date-range filter, and sort by `taken_date` are future enhancements. The current cursor design assumes a single fixed sort (`uploaded_at DESC, uid DESC`); adding another direction or sort key would require encoding that choice into the cursor.
+   - **Page size**: default 50, max 200 (bounded to prevent DoS via unbounded query)
+   - **Item shape**: base image fields + `tags: [{person_uid, person_name}]` + `event: {uid, name} | null` + `place: {uid, name} | null`. Tag coordinates are **not** included here — they belong on the image detail endpoint.
+9. Image count endpoint — `GET /api/images/count` accepting the same filter params, for the gallery's "N photos" display
 
 ### Phase 4: Graph API
 1. Graph exploration query (Cytoscape-formatted JSON)
@@ -269,12 +277,14 @@ Internet → Cloudflare (SSL, DDoS, caching)
 2. GitHub Actions CD (build + push Docker images to GHCR)
 3. Frontend Dockerfile (multi-stage with nginx)
 4. Image thumbnails for gallery performance
-5. Backup script — Neo4j dump (`neo4j-admin database dump`) + MinIO data tar, scheduled via cron, with rolling retention (e.g., 30 daily). Off-site destination TBD (external drive, Backblaze B2, rsync to another machine).
+5. Measure and add Neo4j indexes where `PROFILE` shows label scans in hot queries (candidate: `Image.uploaded_at` for the gallery list — only add if the profile confirms it changes the plan)
+6. Backup script — Neo4j dump (`neo4j-admin database dump`) + MinIO data tar, scheduled via cron, with rolling retention (e.g., 30 daily). Off-site destination TBD (external drive, Backblaze B2, rsync to another machine).
 
 ## Post-MVP Ideas
 - Duplicate image detection (perceptual hashing to catch near-duplicates, not just exact matches)
 - Face detection / auto-tag suggestions (e.g., with face_recognition library)
 - Batch upload with EXIF date/location extraction
+- Date-range filtering on the image list endpoint, and sort by `taken_date` (with null-handling convention — likely null-last, falling back to `uploaded_at`)
 - Timeline view (photos on a chronological timeline)
 - Map view for places (Leaflet)
 - Family tree layout (hierarchical Cytoscape.js or d3-dag)

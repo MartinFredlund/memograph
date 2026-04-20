@@ -12,8 +12,10 @@ from app.auth.schemas import TokenPayload
 from app.dependencies import get_db_session, require_editor, get_current_user
 from app.images.schemas import (
     EventLink,
+    ImageListParams,
     ImageResponse,
     ImageRotate,
+    PaginatedImages,
     PersonTagCreate,
     PersonTagResponse,
     PlaceLink,
@@ -27,6 +29,7 @@ from app.images.service import (
     create_image,
     delete_image,
     get_download_url,
+    list_images,
     remove_tag,
     rotate_image,
     set_event,
@@ -175,3 +178,15 @@ def download_image(
     if url is None:
         raise HTTPException(status_code=404, detail="Image not found")
     return RedirectResponse(url=url, status_code=302)
+
+
+@router.get("/", status_code=200)
+def list_images_endpoint(
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(get_current_user),
+    params: ImageListParams = Depends(),
+) -> PaginatedImages:
+    try:
+        return list_images(session, params)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid cursor")

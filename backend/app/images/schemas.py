@@ -39,9 +39,43 @@ class PersonTagResponse(BaseModel):
     tag_y: float
 
 
+class PersonTagSummary(BaseModel):
+    person_uid: str
+    person_name: str
+
+
+class EventSummary(BaseModel):
+    event_uid: str
+    event_name: str
+
+
+class PlaceSummary(BaseModel):
+    place_uid: str
+    place_name: str
+
+
 class PlaceLink(BaseModel):
     place_uid: str
 
 
 class EventLink(BaseModel):
     event_uid: str
+
+
+class ImageListParams(BaseModel):
+    person_uid: str | None = None
+    event_uid: str | None = None
+    place_uid: str | None = None
+    cursor: str | None = None
+    page_size: int = Field(default=50, ge=1, le=200)
+
+
+class ImageListItem(ImageResponse):
+    tags: list[PersonTagSummary] = []
+    event: EventSummary | None = None
+    place: PlaceSummary | None = None
+
+
+class PaginatedImages(BaseModel):
+    items: list[ImageListItem]
+    next_cursor: str | None = None

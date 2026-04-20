@@ -2,12 +2,14 @@ from enum import Enum
 from io import BytesIO
 from typing import Any
 from uuid import uuid4
-
+import json
+import base64
 from neo4j import Session
 from PIL import Image, ImageOps
 
 from app.auth.schemas import TokenPayload, UserRole
 from app.images import storage
+from app.images.schemas import ImageListItem, ImageListParams, PaginatedImages
 
 ROTATION_MAP = {
     90: Image.Transpose.ROTATE_90,
@@ -281,3 +283,78 @@ def get_download_url(session: Session, uid: str) -> str | None:
     return storage.presigned_url(
         object_key=record["object_key"], expires_minutes=5, download_filename=filename
     )
+
+
+def encode_cursor(uploaded_at_ms: int, uid: str) -> str:
+    payload = {"uploaded_at_ms": uploaded_at_ms, "uid": uid}
+    raw = json.dumps(payload).encode("utf-8")
+    encoded = base64.urlsafe_b64encode(raw)
+    return encoded.decode("ascii")
+
+
+def decode_cursor(cursor: str) -> tuple[int, str]:
+    try:
+        encoded = cursor.encode("ascii")
+        raw = base64.urlsafe_b64decode(encoded)
+        payload = json.loads(raw)
+        return payload["uploaded_at_ms"], payload["uid"]
+    except (ValueError, KeyError, TypeError) as e:
+        raise ValueError("invalid cursor") from e
+
+
+def list_images(session: Session, params: ImageListParams) -> PaginatedImages:
+    query = """
+        MATCH (i:Image)
+        WHERE ($person_uid IS NULL OR EXISTS {(:Person {uid: $person_uid})-[:APPEARS_IN]->(i)})
+        AND ($event_uid IS NULL OR EXISTS {(i)-[:FROM_EVENT]->(:Event {uid: $event_uid})})
+        AND ($place_uid IS NULL OR EXISTS {(i)-[:TAKEN_AT]->(:Place {uid: $place_uid})})
+        AND ($cursor_ts IS NULL OR i.uploaded_at < $cursor_ts
+        OR (i.uploaded_at = $cursor_ts AND i.uid < $cursor_uid))
+        WITH i
+        ORDER BY i.uploaded_at DESC, i.uid DESC
+        LIMIT $limit_plus_one
+        OPTIONAL MATCH (p:Person)-[:APPEARS_IN]->(i)
+        WITH i,
+            [person IN collect(DISTINCT p) WHERE person IS NOT NULL
+            | {person_uid: person.uid, person_name: person.name}] AS tags
+        OPTIONAL MATCH (i)-[:FROM_EVENT]->(e:Event)
+        OPTIONAL MATCH (i)-[:TAKEN_AT]->(pl:Place)
+        RETURN i, tags,
+        CASE WHEN e IS NOT NULL
+            THEN {event_uid: e.uid, event_name: e.name}
+        END AS event,
+        CASE WHEN pl IS NOT NULL
+            THEN {place_uid: pl.uid, place_name: pl.name}
+        END AS place
+        ORDER BY i.uploaded_at DESC, i.uid DESC
+        """
+    if params.cursor is None:
+        cursor_ts, cursor_uid = None, None
+    else:
+        cursor_ts, cursor_uid = decode_cursor(params.cursor)
+    records = list(
+        session.run(
+            query,
+            person_uid=params.person_uid,
+            event_uid=params.event_uid,
+            place_uid=params.place_uid,
+            cursor_ts=cursor_ts,
+            cursor_uid=cursor_uid,
+            limit_plus_one=params.page_size + 1,
+        )
+    )
+    has_more = len(records) > params.page_size
+    page_records = records[: params.page_size]
+
+    items = [
+        ImageListItem(
+            **dict(rec["i"]), tags=rec["tags"], event=rec["event"], place=rec["place"]
+        )
+        for rec in page_records
+    ]
+
+    next_cursor = None
+    if has_more:
+        last_rec = page_records[-1]
+        next_cursor = encode_cursor(last_rec["i"]["uploaded_at"], last_rec["i"]["uid"])
+    return PaginatedImages(items=items, next_cursor=next_cursor)
