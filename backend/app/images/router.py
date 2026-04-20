@@ -12,6 +12,8 @@ from app.auth.schemas import TokenPayload
 from app.dependencies import get_db_session, require_editor, get_current_user
 from app.images.schemas import (
     EventLink,
+    ImageCountParams,
+    ImageCountResponse,
     ImageListParams,
     ImageResponse,
     ImageRotate,
@@ -26,6 +28,7 @@ from app.images.service import (
     PlaceResult,
     TagResult,
     add_tag,
+    count_images,
     create_image,
     delete_image,
     get_download_url,
@@ -190,3 +193,12 @@ def list_images_endpoint(
         return list_images(session, params)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid cursor")
+
+
+@router.get("/count", status_code=200)
+def count_images_endpoint(
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(get_current_user),
+    params: ImageCountParams = Depends(),
+) -> ImageCountResponse:
+    return count_images(session, params)

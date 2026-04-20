@@ -250,7 +250,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
    - **Deferred**: reverse sort direction, date-range filter, and sort by `taken_date` are future enhancements. The current cursor design assumes a single fixed sort (`uploaded_at DESC, uid DESC`); adding another direction or sort key would require encoding that choice into the cursor.
    - **Page size**: default 50, max 200 (bounded to prevent DoS via unbounded query)
    - **Item shape**: base image fields + `tags: [{person_uid, person_name}]` + `event: {uid, name} | null` + `place: {uid, name} | null`. Tag coordinates are **not** included here — they belong on the image detail endpoint.
-9. Image count endpoint — `GET /api/images/count` accepting the same filter params, for the gallery's "N photos" display
+9. [x] Image count endpoint — `GET /api/images/count` accepting the same filter params, for the gallery's "N photos" display
 
 ### Phase 4: Graph API
 1. Graph exploration query (Cytoscape-formatted JSON)

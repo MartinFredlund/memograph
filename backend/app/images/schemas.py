@@ -79,3 +79,13 @@ class ImageListItem(ImageResponse):
 class PaginatedImages(BaseModel):
     items: list[ImageListItem]
     next_cursor: str | None = None
+
+
+class ImageCountParams(BaseModel):
+    person_uid: str | None = None
+    event_uid: str | None = None
+    place_uid: str | None = None
+
+
+class ImageCountResponse(BaseModel):
+    count: int

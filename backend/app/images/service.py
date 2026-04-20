@@ -9,7 +9,13 @@ from PIL import Image, ImageOps
 
 from app.auth.schemas import TokenPayload, UserRole
 from app.images import storage
-from app.images.schemas import ImageListItem, ImageListParams, PaginatedImages
+from app.images.schemas import (
+    ImageCountParams,
+    ImageCountResponse,
+    ImageListItem,
+    ImageListParams,
+    PaginatedImages,
+)
 
 ROTATION_MAP = {
     90: Image.Transpose.ROTATE_90,
@@ -358,3 +364,21 @@ def list_images(session: Session, params: ImageListParams) -> PaginatedImages:
         last_rec = page_records[-1]
         next_cursor = encode_cursor(last_rec["i"]["uploaded_at"], last_rec["i"]["uid"])
     return PaginatedImages(items=items, next_cursor=next_cursor)
+
+
+def count_images(session: Session, params: ImageCountParams) -> ImageCountResponse:
+    query = """
+        MATCH (i:Image)
+        WHERE ($person_uid IS NULL OR EXISTS {(:Person {uid: $person_uid})-[:APPEARS_IN]->(i)})
+        AND ($event_uid IS NULL OR EXISTS {(i)-[:FROM_EVENT]->(:Event {uid: $event_uid})})
+        AND ($place_uid IS NULL OR EXISTS {(i)-[:TAKEN_AT]->(:Place {uid: $place_uid})})
+        RETURN count(i) AS count
+    """
+    result = session.run(
+        query,
+        person_uid=params.person_uid,
+        event_uid=params.event_uid,
+        place_uid=params.place_uid,
+    )
+    record = result.single()
+    return ImageCountResponse(count=record["count"])
