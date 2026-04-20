@@ -1,4 +1,4 @@
-# GraphWeb
+# MemoGraph
 
 A self-hosted photo memory bank and family/social graph. Upload photos, tag the people in them,
 and build up a graph of relationships over time.
@@ -34,7 +34,7 @@ Self-hosted. Your data stays on your server.
 
 ```bash
 # 1. Clone the repo
-git clone <repo-url> graphweb && cd graphweb
+git clone <repo-url> memograph && cd memograph
 
 # 2. Copy the environment file and fill in your values
 cp .env.example .env
@@ -44,7 +44,7 @@ $EDITOR .env
 make up
 
 # 4. Open the app
-# → http://localhost  (or your configured domain)
+# → https://<your-configured-domain>  (via Cloudflare tunnel — no ports exposed on the host)
 # → Default admin credentials are set in .env (ADMIN_USERNAME / ADMIN_PASSWORD)
 ```
 
@@ -103,8 +103,9 @@ Internet → Cloudflare (SSL, DDoS protection)
 **Services:** `cloudflared`, `traefik`, `neo4j`, `minio`, `backend`, `frontend`
 
 **Data model:** Neo4j graph with `Person`, `Event`, `Place`, `Image`, and `User` nodes.
-Relationships are minimal base types (`PARENT_OF`, `SPOUSE_OF`, `FRIEND_OF`, etc.);
-derived relationships (grandparent, sibling, in-law) are computed by Cypher traversal queries.
+Relationships are fixed family types (`PARENT_OF`, `PARTNER_OF`) plus one flexible `SOCIAL`
+relationship with a user-defined `type` property (e.g., "friend", "colleague", "mentor").
+Derived relationships (grandparent, sibling, in-law) are computed by Cypher traversal queries.
 
 For full architectural detail, data model, and implementation plan, see [plan.md](./plan.md).
 
@@ -113,14 +114,11 @@ For full architectural detail, data model, and implementation plan, see [plan.md
 ## Running tests
 
 ```bash
-# Backend tests (pytest)
-make test-backend
-
-# Frontend type-check + lint
-make lint-frontend
+# Backend tests (pytest, requires Docker for Neo4j testcontainer)
+cd backend && uv run pytest
 ```
 
-CI runs automatically on every push via GitHub Actions (see `.github/workflows/`).
+_Frontend lint/type-check **(Phase 5)** and CI via GitHub Actions **(Phase 6)** are not wired up yet._
 
 ---
 
@@ -128,13 +126,13 @@ CI runs automatically on every push via GitHub Actions (see `.github/workflows/`
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Python 3.12, FastAPI, Pydantic v2 |
+| Backend | Python 3.14, FastAPI, Pydantic v2 |
 | Graph database | Neo4j 5 Community Edition |
 | Object storage | MinIO (S3-compatible) |
-| Frontend | React 18, TypeScript, Ant Design, Cytoscape.js |
-| Data fetching | @tanstack/react-query |
+| Frontend _(Phase 5)_ | React, TypeScript, Ant Design, Cytoscape.js |
+| Data fetching _(Phase 5)_ | @tanstack/react-query |
 | Reverse proxy | Traefik v3 |
-| CI/CD | GitHub Actions |
+| CI/CD _(Phase 6)_ | GitHub Actions |
 | Build tools | Vite (frontend), uv (backend) |
 
 ---
