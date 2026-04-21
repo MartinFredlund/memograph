@@ -253,7 +253,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 9. [x] Image count endpoint — `GET /api/images/count` accepting the same filter params, for the gallery's "N photos" display
 
 ### Phase 4: Graph API
-1. Graph exploration query (Cytoscape-formatted JSON)
+1. [x] Graph exploration query (Cytoscape-formatted JSON)
 2. Person neighborhood query (for mini-graphs on person pages)
 3. Search endpoint (full-text across all entity types)
 

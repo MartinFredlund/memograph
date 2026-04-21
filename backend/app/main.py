@@ -11,6 +11,7 @@ from app.relationships.router import router as relationships_router
 from app.events.router import router as events_router
 from app.places.router import router as places_router
 from app.images.router import router as images_router
+from app.graph.router import router as graph_router
 
 
 @asynccontextmanager
@@ -36,3 +37,4 @@ app.include_router(relationships_router)
 app.include_router(events_router)
 app.include_router(places_router)
 app.include_router(images_router)
+app.include_router(graph_router)
