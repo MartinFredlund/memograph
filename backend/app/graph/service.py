@@ -99,3 +99,23 @@ def list_attended_edges(session: Session) -> list[dict]:
                 "derived": True,
             }
     return list(edges.values())
+
+
+def get_mini_graph(session: Session, uid: str) -> dict | None:
+    query = """
+        MATCH (center:Person {uid: $uid})
+        OPTIONAL MATCH (center)-[*1]-(neighbor:Person)
+        WITH center, collect(DISTINCT neighbor.uid) AS neighbor_uids
+        WITH [center.uid] + [x IN neighbor_uids WHERE x IS NOT NULL] AS uids
+        MATCH (n:Person)
+        WHERE n.uid in uids
+        WITH uids, collect({uid: n.uid, type: "Person", name: n.name}) AS nodes
+        OPTIONAL MATCH (a:Person)-[r]->(b:Person)
+        WHERE a.uid IN uids AND b.uid IN uids AND type(r) IN ['PARENT_OF', 'PARTNER_OF', 'SOCIAL']
+        RETURN nodes, [e IN collect({id: elementID(r), source: a.uid, target: b.uid, label: type(r), social_type: r.type}) WHERE e.id IS NOT NULL] AS edges
+    """
+    result = session.run(query, uid=uid)
+    record = result.single()
+    if record is None:
+        return None
+    return {"nodes": record["nodes"], "edges": record["edges"]}

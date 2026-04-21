@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from neo4j import Session
 
 from app.auth.schemas import TokenPayload
 from app.dependencies import get_current_user, get_db_session
 from app.graph.schemas import GraphEdge, GraphNode, GraphResponse
 from app.graph.service import (
+    get_mini_graph,
     list_attended_edges,
     list_nodes,
     list_plain_edges,
@@ -26,4 +27,19 @@ def get_graph(
     return GraphResponse(
         nodes=[GraphNode(**n) for n in list_nodes(session)],
         edges=edges,
+    )
+
+
+@router.get("/neighborhood/{uid}", status_code=200)
+def get_mini_graph_endpoint(
+    uid: str,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(get_current_user),
+) -> GraphResponse:
+    result = get_mini_graph(session, uid)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Person not found")
+    return GraphResponse(
+        nodes=[GraphNode(**n) for n in result["nodes"]],
+        edges=[GraphEdge(**e) for e in result["edges"]],
     )
