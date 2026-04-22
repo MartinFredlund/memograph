@@ -4,6 +4,7 @@ from neo4j import Session
 from app.auth.schemas import TokenPayload
 from app.dependencies import get_current_user, get_db_session, require_editor
 from app.people.schemas import (
+    AttendedCreate,
     BornAtCreate,
     EventResponse,
     PersonCreate,
@@ -12,13 +13,16 @@ from app.people.schemas import (
     PlaceResponse,
 )
 from app.people.service import (
+    AttendedResult,
     BornAtResult,
+    add_tag_attended,
     add_tag_born_at,
     create_person,
     get_person,
     list_attended_events,
     list_persons,
     list_visited_places,
+    remove_tag_attended,
     unset_tag_born_at,
     update_person,
 )
@@ -109,3 +113,31 @@ def delete_born_at(
     result = unset_tag_born_at(session, uid)
     if result == BornAtResult.PERSON_NOT_FOUND:
         raise HTTPException(status_code=404, detail="Person not found")
+
+
+@router.post("/{uid}/attended", status_code=201)
+def add_attended(
+    uid: str,
+    data: AttendedCreate,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(require_editor),
+) -> None:
+    result = add_tag_attended(session, uid, data)
+    if result == AttendedResult.PERSON_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Person not found")
+    if result == AttendedResult.EVENT_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+
+@router.delete("/{uid}/attended/{event_uid}", status_code=204)
+def delete_attended(
+    uid: str,
+    event_uid: str,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(require_editor),
+) -> None:
+    result = remove_tag_attended(session, uid, event_uid)
+    if result == AttendedResult.PERSON_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Person not found")
+    if result == AttendedResult.EVENT_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Event not found")

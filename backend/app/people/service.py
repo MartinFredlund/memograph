@@ -2,13 +2,19 @@ from enum import Enum
 from uuid import uuid4
 from neo4j import Session
 
-from app.people.schemas import PersonCreate, PersonUpdate, BornAtCreate
+from app.people.schemas import AttendedCreate, PersonCreate, PersonUpdate, BornAtCreate
 
 
 class BornAtResult(str, Enum):
     OK = "ok"
     PERSON_NOT_FOUND = "person not found"
     PLACE_NOT_FOUND = "place not found"
+
+
+class AttendedResult(str, Enum):
+    OK = "ok"
+    PERSON_NOT_FOUND = "person not found"
+    EVENT_NOT_FOUND = "event not found"
 
 
 def create_person(session: Session, data: PersonCreate) -> dict:
@@ -153,3 +159,43 @@ def unset_tag_born_at(session: Session, uid: str) -> BornAtResult:
         "OPTIONAL MATCH (p:Person {uid:$uid})-[r:BORN_AT]->() DELETE r", uid=uid
     )
     return BornAtResult.OK
+
+
+def add_tag_attended(
+    session: Session, uid: str, data: AttendedCreate
+) -> AttendedResult:
+    result_person = session.run("MATCH (p:Person {uid:$uid}) RETURN 1", uid=uid)
+    record_person = result_person.single()
+    if record_person is None:
+        return AttendedResult.PERSON_NOT_FOUND
+    result_event = session.run(
+        "MATCH (e:Event {uid:$event_uid}) RETURN 1", event_uid=data.event_uid
+    )
+    record_event = result_event.single()
+    if record_event is None:
+        return AttendedResult.EVENT_NOT_FOUND
+    session.run(
+        "MATCH (p:Person {uid: $uid}), (e:Event {uid: $event_uid}) MERGE (p)-[:ATTENDED]->(e)",
+        uid=uid,
+        event_uid=data.event_uid,
+    )
+    return AttendedResult.OK
+
+
+def remove_tag_attended(session: Session, uid: str, event_uid: str) -> AttendedResult:
+    result_person = session.run("MATCH (p:Person {uid:$uid}) RETURN 1", uid=uid)
+    record_person = result_person.single()
+    if record_person is None:
+        return AttendedResult.PERSON_NOT_FOUND
+    result_event = session.run(
+        "MATCH (e:Event {uid:$event_uid}) RETURN 1", event_uid=event_uid
+    )
+    record_event = result_event.single()
+    if record_event is None:
+        return AttendedResult.EVENT_NOT_FOUND
+    session.run(
+        "MATCH (:Person {uid:$uid}) - [r:ATTENDED] -> (:Event {uid:$event_uid}) DELETE r",
+        uid=uid,
+        event_uid=event_uid,
+    )
+    return AttendedResult.OK

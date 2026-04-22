@@ -133,7 +133,6 @@ Family relationships are fixed types — graph traversal depends on them. Social
 - `BORN_AT` (Person → Place) — optional birth location
 - `ATTENDED` (Person → Event)
 - `HELD_AT` (Event → Place)
-- `LIVES_AT` (Person → Place) — properties: `since?`
 
 ### Constraints
 ```cypher
@@ -258,9 +257,9 @@ Internet → Cloudflare (SSL, DDoS, caching)
 3. [x] Person events endpoint — `GET /api/people/{uid}/events` (events attended, explicit + derived from photos)
 4. [x] Person places endpoint — `GET /api/people/{uid}/places` (photo-derived only: places where the person appears in photos via APPEARS_IN→TAKEN_AT)
 5. Entity cross-reference endpoints (same pattern as image associations):
-   - Person: `PUT/DELETE /api/people/{uid}/born-at`, `PUT/DELETE /api/people/{uid}/lives-at`, `POST/DELETE /api/people/{uid}/attended`
+   - Person: `PUT/DELETE /api/people/{uid}/born-at`, `POST/DELETE /api/people/{uid}/attended`
    - Event: `PUT/DELETE /api/events/{uid}/place` (HELD_AT)
-   - `born-at` and `lives-at` are person attributes (single place each), not list endpoints
+   - `born-at` is a person attribute (single place), not a list endpoint
 6. Search endpoint (full-text across all entity types)
 
 ### Phase 5: Frontend

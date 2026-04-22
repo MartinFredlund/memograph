@@ -86,3 +86,7 @@ class PlaceResponse(BaseModel):
 
 class BornAtCreate(BaseModel):
     place_uid: str
+
+
+class AttendedCreate(BaseModel):
+    event_uid: str
