@@ -213,7 +213,6 @@ async def test_cross_ref_edges(client, db_session, viewer_token):
     db_session.run(
         """
         MATCH (p:Person {uid: $p_uid}), (pl:Place {uid: $pl_uid}), (e:Event {uid: $e_uid})
-        CREATE (p)-[:LIVES_AT]->(pl)
         CREATE (p)-[:BORN_AT]->(pl)
         CREATE (e)-[:HELD_AT]->(pl)
         """,
@@ -227,8 +226,8 @@ async def test_cross_ref_edges(client, db_session, viewer_token):
 
     edges = response.json()["edges"]
     labels = {e["label"] for e in edges}
-    assert {"LIVES_AT", "BORN_AT", "HELD_AT"} == labels
-    assert len(edges) == 3
+    assert {"BORN_AT", "HELD_AT"} == labels
+    assert len(edges) == 2
 
 
 async def test_unauthenticated_returns_401(client):

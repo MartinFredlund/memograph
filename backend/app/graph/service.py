@@ -26,8 +26,6 @@ def list_plain_edges(session: Session) -> list[dict]:
             UNION
             MATCH (a)-[r:HELD_AT]->(b) RETURN elementID(r) AS id, a.uid AS source, b.uid AS target, type(r) AS label
             UNION
-            MATCH (a)-[r:LIVES_AT]->(b) RETURN elementID(r) AS id, a.uid AS source, b.uid AS target, type(r) AS label
-            UNION
             MATCH (a)-[r:BORN_AT]->(b) RETURN elementID(r) AS id, a.uid AS source, b.uid AS target, type(r) AS label
         }
         RETURN id, source, target, label

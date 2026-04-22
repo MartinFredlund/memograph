@@ -106,13 +106,13 @@ async def test_social_edge_includes_social_type(client, db_session, viewer_token
 
 
 async def test_excludes_non_person_relationships(client, db_session, viewer_token):
-    """HELD_AT, LIVES_AT etc. should not appear in the neighborhood graph."""
+    """HELD_AT, BORN_AT etc. should not appear in the neighborhood graph."""
     alice = create_person(db_session, PersonCreate(name="Alice"))
     db_session.run(
         """
         MATCH (a:Person {uid: $uid})
         CREATE (pl:Place {uid: $place_uid, name: 'Stockholm'})
-        CREATE (a)-[:LIVES_AT]->(pl)
+        CREATE (a)-[:BORN_AT]->(pl)
         """,
         {"uid": alice["uid"], "place_uid": str(uuid4())},
     )
