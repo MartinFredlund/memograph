@@ -261,6 +261,9 @@ Internet → Cloudflare (SSL, DDoS, caching)
    - Event: `PUT/DELETE /api/events/{uid}/place` (HELD_AT)
    - `born-at` is a person attribute (single place), not a list endpoint
 6. [x] Search endpoint (full-text across all entity types)
+7. Image detail endpoint — `GET /api/images/{uid}` (single image with full details: tags with coordinates, event, place, caption)
+8. Image metadata update endpoint — `PUT /api/images/{uid}` (update caption, taken_date)
+9. User management endpoints — `GET /api/users`, `PUT /api/users/{uid}` (list users, update roles — needed for AdminPage)
 
 ### Phase 5: Frontend
 1. Vite + React + TS + Ant Design scaffold
