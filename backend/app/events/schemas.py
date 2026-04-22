@@ -41,3 +41,7 @@ class EventResponse(BaseModel):
         if isinstance(v, Neo4jDate):
             return v.to_native()  # converts to datetime.date
         return v
+
+
+class HeldAtCreate(BaseModel):
+    place_uid: str

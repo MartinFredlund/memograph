@@ -256,7 +256,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 2. [x] Person neighborhood query (for mini-graphs on person pages — people only, traverses PARENT_OF/PARTNER_OF/SOCIAL)
 3. [x] Person events endpoint — `GET /api/people/{uid}/events` (events attended, explicit + derived from photos)
 4. [x] Person places endpoint — `GET /api/people/{uid}/places` (photo-derived only: places where the person appears in photos via APPEARS_IN→TAKEN_AT)
-5. Entity cross-reference endpoints (same pattern as image associations):
+5. [x] Entity cross-reference endpoints (same pattern as image associations):
    - Person: `PUT/DELETE /api/people/{uid}/born-at`, `POST/DELETE /api/people/{uid}/attended`
    - Event: `PUT/DELETE /api/events/{uid}/place` (HELD_AT)
    - `born-at` is a person attribute (single place), not a list endpoint
