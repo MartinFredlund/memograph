@@ -90,3 +90,21 @@ def list_attended_events(session: Session, uid: str) -> list[dict]:
                 "derived": True,
             }
     return list(events.values())
+
+
+def list_visited_places(session: Session, uid: str) -> list[dict]:
+    query = """
+        MATCH (:Person {uid: $uid}) - [:APPEARS_IN] -> (:Image) - [:TAKEN_AT] -> (pl:Place)
+        return DISTINCT pl as place
+   """
+    result = session.run(query, uid=uid)
+    places = {}
+    for r in result:
+        place = r["place"]
+        places[place["uid"]] = {
+            "uid": place["uid"],
+            "name": place["name"],
+            "address": place["address"],
+            "description": place["description"],
+        }
+    return list(places.values())

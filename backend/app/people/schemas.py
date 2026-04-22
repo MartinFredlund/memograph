@@ -75,3 +75,10 @@ class EventResponse(BaseModel):
         if isinstance(v, Neo4jDate):
             return v.to_native()  # converts to datetime.date
         return v
+
+
+class PlaceResponse(BaseModel):
+    uid: str
+    name: str
+    address: str | None = None
+    description: str | None = None

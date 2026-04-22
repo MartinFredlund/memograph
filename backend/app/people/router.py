@@ -2,12 +2,19 @@ from fastapi import APIRouter, Depends, HTTPException
 from neo4j import Session
 
 from app.dependencies import get_current_user, get_db_session, require_editor
-from app.people.schemas import EventResponse, PersonCreate, PersonResponse, PersonUpdate
+from app.people.schemas import (
+    EventResponse,
+    PersonCreate,
+    PersonResponse,
+    PersonUpdate,
+    PlaceResponse,
+)
 from app.people.service import (
     create_person,
     get_person,
     list_attended_events,
     list_persons,
+    list_visited_places,
     update_person,
 )
 
@@ -63,3 +70,12 @@ def list_events(
     current_user=Depends(get_current_user),
 ) -> list[EventResponse]:
     return [EventResponse(**e) for e in list_attended_events(session, uid)]
+
+
+@router.get("/{uid}/places", status_code=200)
+def list_places(
+    uid: str,
+    session: Session = Depends(get_db_session),
+    current_user=Depends(get_current_user),
+) -> list[PlaceResponse]:
+    return [PlaceResponse(**p) for p in list_visited_places(session, uid)]
