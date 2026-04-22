@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from neo4j import Session
 
+from app.auth.schemas import TokenPayload
 from app.dependencies import get_current_user, get_db_session, require_editor
 from app.people.schemas import (
+    BornAtCreate,
     EventResponse,
     PersonCreate,
     PersonResponse,
@@ -10,11 +12,14 @@ from app.people.schemas import (
     PlaceResponse,
 )
 from app.people.service import (
+    BornAtResult,
+    add_tag_born_at,
     create_person,
     get_person,
     list_attended_events,
     list_persons,
     list_visited_places,
+    unset_tag_born_at,
     update_person,
 )
 
@@ -79,3 +84,28 @@ def list_places(
     current_user=Depends(get_current_user),
 ) -> list[PlaceResponse]:
     return [PlaceResponse(**p) for p in list_visited_places(session, uid)]
+
+
+@router.put("/{uid}/born-at", status_code=204)
+def add_born_at(
+    uid: str,
+    data: BornAtCreate,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(require_editor),
+) -> None:
+    result = add_tag_born_at(session, uid, data)
+    if result == BornAtResult.PERSON_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Person not found")
+    if result == BornAtResult.PLACE_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Place not found")
+
+
+@router.delete("/{uid}/born-at", status_code=204)
+def delete_born_at(
+    uid: str,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(require_editor),
+) -> None:
+    result = unset_tag_born_at(session, uid)
+    if result == BornAtResult.PERSON_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Person not found")

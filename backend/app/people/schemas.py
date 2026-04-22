@@ -82,3 +82,7 @@ class PlaceResponse(BaseModel):
     name: str
     address: str | None = None
     description: str | None = None
+
+
+class BornAtCreate(BaseModel):
+    place_uid: str

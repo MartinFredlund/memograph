@@ -1,7 +1,14 @@
+from enum import Enum
 from uuid import uuid4
 from neo4j import Session
 
-from app.people.schemas import PersonCreate, PersonUpdate
+from app.people.schemas import PersonCreate, PersonUpdate, BornAtCreate
+
+
+class BornAtResult(str, Enum):
+    OK = "ok"
+    PERSON_NOT_FOUND = "person not found"
+    PLACE_NOT_FOUND = "place not found"
 
 
 def create_person(session: Session, data: PersonCreate) -> dict:
@@ -108,3 +115,41 @@ def list_visited_places(session: Session, uid: str) -> list[dict]:
             "description": place["description"],
         }
     return list(places.values())
+
+
+def add_tag_born_at(session: Session, uid: str, data: BornAtCreate) -> BornAtResult:
+    result_person = session.run("MATCH (p:Person {uid:$uid}) RETURN 1", uid=uid)
+    record_person = result_person.single()
+    if record_person is None:
+        return BornAtResult.PERSON_NOT_FOUND
+    result_place = session.run(
+        "MATCH (pl:Place {uid:$place_uid}) RETURN 1", place_uid=data.place_uid
+    )
+    record_place = result_place.single()
+    if record_place is None:
+        return BornAtResult.PLACE_NOT_FOUND
+    query = """
+        MATCH (p:Person {uid: $uid})
+        OPTIONAL MATCH (p)-[r:BORN_AT]->(:Place)
+        DELETE r
+        WITH p
+        MATCH (pl:Place {uid: $place_uid})
+        CREATE (p)-[:BORN_AT]->(pl)
+    """
+    session.run(
+        query,
+        uid=uid,
+        place_uid=data.place_uid,
+    )
+    return BornAtResult.OK
+
+
+def unset_tag_born_at(session: Session, uid: str) -> BornAtResult:
+    result_person = session.run("MATCH (p:Person {uid:$uid}) RETURN 1", uid=uid)
+    record_person = result_person.single()
+    if record_person is None:
+        return BornAtResult.PERSON_NOT_FOUND
+    session.run(
+        "OPTIONAL MATCH (p:Person {uid:$uid})-[r:BORN_AT]->() DELETE r", uid=uid
+    )
+    return BornAtResult.OK
