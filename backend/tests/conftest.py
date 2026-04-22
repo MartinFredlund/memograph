@@ -63,6 +63,10 @@ def db_session(neo4j_driver):
             "CREATE CONSTRAINT user_username IF NOT EXISTS "
             "FOR (u:User) REQUIRE u.username IS UNIQUE"
         )
+        session.run(
+            "CREATE FULLTEXT INDEX search_index IF NOT EXISTS "
+            "FOR (n:Person|Event|Place) ON EACH [n.name]"
+        )
         yield session
 
 

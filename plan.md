@@ -260,7 +260,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
    - Person: `PUT/DELETE /api/people/{uid}/born-at`, `POST/DELETE /api/people/{uid}/attended`
    - Event: `PUT/DELETE /api/events/{uid}/place` (HELD_AT)
    - `born-at` is a person attribute (single place), not a list endpoint
-6. Search endpoint (full-text across all entity types)
+6. [x] Search endpoint (full-text across all entity types)
 
 ### Phase 5: Frontend
 1. Vite + React + TS + Ant Design scaffold

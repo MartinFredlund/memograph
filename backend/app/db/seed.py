@@ -15,6 +15,7 @@ def run_seed(neo4j_driver: Driver, settings: Settings):
         "CREATE CONSTRAINT image_uid IF NOT EXISTS FOR (i:Image) REQUIRE i.uid IS UNIQUE",
         "CREATE CONSTRAINT user_uid IF NOT EXISTS FOR (u:User) REQUIRE u.uid IS UNIQUE",
         "CREATE CONSTRAINT user_username IF NOT EXISTS FOR (u:User) REQUIRE u.username IS UNIQUE",
+        "CREATE FULLTEXT INDEX search_index IF NOT EXISTS FOR (n:Person|Event|Place) ON EACH [n.name]",
     ]
     with neo4j_driver.session() as session:
         for query in constraint_queries:
