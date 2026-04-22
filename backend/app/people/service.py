@@ -42,3 +42,51 @@ def update_person(session: Session, uid: str, data: PersonUpdate) -> dict | None
 def list_persons(session: Session) -> list[dict]:
     result = session.run("MATCH (p:Person) RETURN p")
     return [dict(record["p"]) for record in result]
+
+
+def list_attended_events(session: Session, uid: str) -> list[dict]:
+    query_explicit = """
+        MATCH (:Person {uid: $uid})-[:ATTENDED]->(e:Event)
+        RETURN e AS event
+    """
+    query_derived = """
+        MATCH (p:Person {uid: $uid})-[:APPEARS_IN]->(i:Image)-[:FROM_EVENT]->(e:Event)
+        RETURN DISTINCT e AS event
+    """
+    result_explicit = session.run(query_explicit, uid=uid)
+
+    events = {}
+    for r in result_explicit:
+        event = r["event"]
+        key = event["uid"]
+        events[key] = {
+            "uid": event["uid"],
+            "name": event["name"],
+            "start_date": event["start_date"],
+            "end_date": event["end_date"],
+            "description": event["description"],
+            "created_at": event["created_at"],
+            "updated_at": event["updated_at"],
+            "explicit": True,
+            "derived": False,
+        }
+    result_derived = session.run(query_derived, uid=uid)
+    for r in result_derived:
+        event = r["event"]
+        key = event["uid"]
+        if key in events:
+            events[key]["derived"] = True
+
+        else:
+            events[key] = {
+                "uid": event["uid"],
+                "name": event["name"],
+                "start_date": event["start_date"],
+                "end_date": event["end_date"],
+                "description": event["description"],
+                "created_at": event["created_at"],
+                "updated_at": event["updated_at"],
+                "explicit": False,
+                "derived": True,
+            }
+    return list(events.values())

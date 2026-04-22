@@ -2,8 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from neo4j import Session
 
 from app.dependencies import get_current_user, get_db_session, require_editor
-from app.people.schemas import PersonCreate, PersonResponse, PersonUpdate
-from app.people.service import create_person, get_person, list_persons, update_person
+from app.people.schemas import EventResponse, PersonCreate, PersonResponse, PersonUpdate
+from app.people.service import (
+    create_person,
+    get_person,
+    list_attended_events,
+    list_persons,
+    update_person,
+)
 
 router = APIRouter(prefix="/api/people", tags=["people"])
 
@@ -48,3 +54,12 @@ def update(
     if person is None:
         raise HTTPException(status_code=404, detail="Person not found")
     return PersonResponse(**person)
+
+
+@router.get("/{uid}/events", status_code=200)
+def list_events(
+    uid: str,
+    session: Session = Depends(get_db_session),
+    current_user=Depends(get_current_user),
+) -> list[EventResponse]:
+    return [EventResponse(**e) for e in list_attended_events(session, uid)]

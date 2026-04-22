@@ -255,7 +255,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 ### Phase 4: Graph API
 1. [x] Graph exploration query (Cytoscape-formatted JSON)
 2. [x] Person neighborhood query (for mini-graphs on person pages — people only, traverses PARENT_OF/PARTNER_OF/SOCIAL)
-3. Person events endpoint — `GET /api/people/{uid}/events` (events attended, explicit + derived from photos)
+3. [x] Person events endpoint — `GET /api/people/{uid}/events` (events attended, explicit + derived from photos)
 4. Person places endpoint — `GET /api/people/{uid}/places` (places linked via LIVES_AT, BORN_AT)
 5. Entity cross-reference endpoints (same pattern as image associations):
    - Person: `PUT/DELETE /api/people/{uid}/born-at`, `PUT/DELETE /api/people/{uid}/lives-at`, `POST/DELETE /api/people/{uid}/attended`
