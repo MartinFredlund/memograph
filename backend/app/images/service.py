@@ -14,6 +14,7 @@ from app.images.schemas import (
     ImageCountResponse,
     ImageListItem,
     ImageListParams,
+    ImageUpdate,
     PaginatedImages,
 )
 
@@ -118,6 +119,19 @@ def rotate_image(session: Session, uid: str, degrees: int) -> dict | None:
     )
     update = update_result.single()
     return dict(update["i"]) if update else None
+
+
+def update_image(session: Session, uid: str, body: ImageUpdate) -> dict | None:
+    updates = body.model_dump(exclude_unset=True)
+    if not updates:
+        result = session.run("MATCH (i:Image {uid: $uid}) RETURN i", uid=uid)
+        record = result.single()
+        return dict(record["i"]) if record else None
+    set_clauses = ", ".join(f"i.{key} = ${key}" for key in updates)
+    query = f"MATCH (i:Image {{uid: $uid}}) SET {set_clauses} RETURN i"
+    result = session.run(query, uid=uid, **updates)
+    record = result.single()
+    return dict(record["i"]) if record else None
 
 
 def delete_image(

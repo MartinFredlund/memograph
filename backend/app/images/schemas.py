@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -15,6 +15,8 @@ class ImageResponse(BaseModel):
     content_type: str
     size_bytes: int
     uploaded_at: datetime
+    caption: str | None = None
+    taken_date: date | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -24,6 +26,18 @@ class ImageResponse(BaseModel):
         if isinstance(v, int):
             return datetime.fromtimestamp(v / 1000, tz=timezone.utc)
         return v
+
+    @field_validator("taken_date", mode="before")
+    @classmethod
+    def neo4j_date_to_native(cls, v):
+        if v is not None and hasattr(v, "to_native"):
+            return v.to_native()
+        return v
+
+
+class ImageUpdate(BaseModel):
+    taken_date: date | None = None
+    caption: str | None = None
 
 
 class PersonTagCreate(BaseModel):

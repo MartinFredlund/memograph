@@ -17,6 +17,7 @@ from app.images.schemas import (
     ImageListParams,
     ImageResponse,
     ImageRotate,
+    ImageUpdate,
     PaginatedImages,
     PersonTagCreate,
     PersonTagResponse,
@@ -39,6 +40,7 @@ from app.images.service import (
     set_place,
     unset_event,
     unset_place,
+    update_image,
 )
 
 router = APIRouter(prefix="/api/images", tags=["images"])
@@ -75,6 +77,19 @@ async def upload(
         )
         created.append(ImageResponse(**image))
     return created
+
+
+@router.put("/{uid}")
+def update(
+    uid: str,
+    data: ImageUpdate,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(require_editor),
+) -> ImageResponse:
+    result = update_image(session, uid, data)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return ImageResponse(**result)
 
 
 @router.delete("/{uid}", status_code=204)
