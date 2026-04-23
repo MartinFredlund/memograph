@@ -14,6 +14,7 @@ from app.images.schemas import (
     EventLink,
     ImageCountParams,
     ImageCountResponse,
+    ImageDetail,
     ImageListParams,
     ImageResponse,
     ImageRotate,
@@ -33,6 +34,7 @@ from app.images.service import (
     create_image,
     delete_image,
     get_download_url,
+    get_image_details,
     list_images,
     remove_tag,
     rotate_image,
@@ -217,3 +219,15 @@ def count_images_endpoint(
     params: ImageCountParams = Depends(),
 ) -> ImageCountResponse:
     return count_images(session, params)
+
+
+@router.get("/{uid}", status_code=200)
+def get_image_details_endpoint(
+    uid: str,
+    session: Session = Depends(get_db_session),
+    current_user: TokenPayload = Depends(get_current_user),
+) -> ImageDetail:
+    result = get_image_details(session, uid)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return result

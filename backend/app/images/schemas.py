@@ -35,6 +35,12 @@ class ImageResponse(BaseModel):
         return v
 
 
+class ImageDetail(ImageResponse):
+    tags: list[PersonTagResponse] = []
+    event: EventSummary | None = None
+    place: PlaceSummary | None = None
+
+
 class ImageUpdate(BaseModel):
     taken_date: date | None = None
     caption: str | None = None

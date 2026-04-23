@@ -12,6 +12,7 @@ from app.images import storage
 from app.images.schemas import (
     ImageCountParams,
     ImageCountResponse,
+    ImageDetail,
     ImageListItem,
     ImageListParams,
     ImageUpdate,
@@ -396,3 +397,30 @@ def count_images(session: Session, params: ImageCountParams) -> ImageCountRespon
     )
     record = result.single()
     return ImageCountResponse(count=record["count"])
+
+
+def get_image_details(session: Session, uid: str) -> ImageDetail | None:
+    query = """
+        MATCH (i:Image {uid: $uid})
+        OPTIONAL MATCH (p:Person)-[r:APPEARS_IN]->(i)
+        WITH i, [t IN collect(DISTINCT {person_uid: p.uid, person_name: p.name, tag_x: r.tag_x, tag_y: r.tag_y}) WHERE t.person_uid IS NOT NULL] AS tags
+        OPTIONAL MATCH (i)-[:FROM_EVENT]->(e:Event)
+        OPTIONAL MATCH (i)-[:TAKEN_AT]->(pl:Place)
+        RETURN i, tags,
+        CASE WHEN e IS NOT NULL
+            THEN {event_uid: e.uid, event_name: e.name}
+        END AS event,
+        CASE WHEN pl IS NOT NULL
+            THEN {place_uid: pl.uid, place_name: pl.name}
+        END AS place
+        """
+    result = session.run(query, uid=uid)
+    record = result.single()
+    if record is None:
+        return None
+    return ImageDetail(
+        **dict(record["i"]),
+        tags=record["tags"],
+        event=record["event"],
+        place=record["place"],
+    )
