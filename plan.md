@@ -267,7 +267,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 
 ### Phase 5: Frontend
 1. [x] Vite + React + TS + Ant Design scaffold
-2. API client with JWT interceptor
+2. [x] API client with JWT interceptor
 3. Auth context + login page
 4. AppLayout with sidebar navigation + routing
 5. **GalleryPage** — image grid with filters (this is the main page)
