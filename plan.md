@@ -266,7 +266,7 @@ Internet → Cloudflare (SSL, DDoS, caching)
 9. [x] User management endpoints — `GET /api/users`, `PUT /api/users/{uid}` (list users, update roles — needed for AdminPage)
 
 ### Phase 5: Frontend
-1. Vite + React + TS + Ant Design scaffold
+1. [x] Vite + React + TS + Ant Design scaffold
 2. API client with JWT interceptor
 3. Auth context + login page
 4. AppLayout with sidebar navigation + routing
