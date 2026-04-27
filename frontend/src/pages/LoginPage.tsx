@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { useI18n } from "../i18n/I18nContext";
 import { login } from "../api/auth";
 
 export default function LoginPage() {
@@ -9,6 +10,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login: setAuth } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,7 +22,7 @@ export default function LoginPage() {
       setAuth(access_token);
       navigate("/");
     } catch {
-      setError("Invalid username or password");
+      setError(t("invalidCredentials"));
     } finally {
       setLoading(false);
     }
@@ -28,11 +30,11 @@ export default function LoginPage() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h1>MemoGraph</h1>
+      <h1>{t("appName")}</h1>
       {error && <p style={{ color: "red" }}>{error}</p>}
       <div>
         <input
-          placeholder="Username"
+          placeholder={t("username")}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
@@ -40,13 +42,13 @@ export default function LoginPage() {
       <div>
         <input
           type="password"
-          placeholder="Password"
+          placeholder={t("password")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
       </div>
       <button type="submit" disabled={loading}>
-        {loading ? "Logging in..." : "Log in"}
+        {loading ? t("loggingIn") : t("login")}
       </button>
     </form>
   );
