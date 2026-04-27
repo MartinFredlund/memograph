@@ -5,7 +5,7 @@ from uuid import uuid4
 import bcrypt
 
 from app import config
-from app.auth.schemas import TokenPayload, UserRole
+from app.auth.schemas import TokenPayload, UpdateUser, UserResponse, UserRole
 
 
 def hash_password(plain: str) -> str:
@@ -72,4 +72,26 @@ def create_user(
         role=role.value,
     )
     record = result.single()
+    return dict(record["u"])
+
+
+def get_all_users(
+    session: Session,
+) -> list[UserResponse]:
+    result = session.run("MATCH (u:User) RETURN u")
+    return [UserResponse(**dict(record["u"])) for record in result]
+
+
+def update_user(session: Session, uid: str, data: UpdateUser) -> dict | None:
+    props = data.model_dump(exclude_none=True, mode="json")
+    if "password" in props:
+        props["hashed_password"] = hash_password(props.pop("password"))
+    result = session.run(
+        "MATCH (u:User {uid: $uid}) SET u += $props, u.updated_at = timestamp() RETURN u",
+        uid=uid,
+        props=props,
+    )
+    record = result.single()
+    if record is None:
+        return None
     return dict(record["u"])

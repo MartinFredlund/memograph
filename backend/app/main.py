@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from app.config import get_settings
 from app.db import neo4j_driver, minio_client, seed
 from app.health.router import router as health_router
-from app.auth.router import router as auth_router
+from app.auth.router import router as auth_router, user_router
 from app.people.router import router as people_router
 from app.relationships.router import router as relationships_router
 from app.events.router import router as events_router
@@ -40,3 +40,4 @@ app.include_router(places_router)
 app.include_router(images_router)
 app.include_router(graph_router)
 app.include_router(search_router)
+app.include_router(user_router)

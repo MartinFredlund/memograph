@@ -57,3 +57,18 @@ class UserResponse(BaseModel):
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UpdateUser(BaseModel):
+    username: str | None = Field(
+        None,
+        min_length=3,
+        max_length=50,
+        description="Must be at least 3 characters long.",
+    )
+    password: str | None = Field(
+        None,
+        min_length=8,
+        description="Strong password required, minimum 8 characters.",
+    )
+    role: UserRole | None = None

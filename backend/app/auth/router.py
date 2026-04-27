@@ -2,17 +2,20 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from neo4j import Session
 
-from app.auth.schemas import Token, UserCreate, UserResponse, UserRole
+from app.auth.schemas import Token, UpdateUser, UserCreate, UserResponse, UserRole
 from app.auth.service import (
     create_access_token,
     create_user,
+    get_all_users,
     get_user_by_username,
     hash_password,
+    update_user,
     verify_password,
 )
 from app.dependencies import get_current_user, get_db_session
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+user_router = APIRouter(prefix="/api/users", tags=["users"])
 
 
 @router.post("/login")
@@ -49,3 +52,27 @@ def register(
             user_create.role,
         )
     )
+
+
+@user_router.put("/{uid}")
+def update(
+    uid: str,
+    data: UpdateUser,
+    session: Session = Depends(get_db_session),
+    current_user=Depends(get_current_user),
+) -> UserResponse:
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    result = update_user(session, uid, data)
+    if result is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return UserResponse(**result)
+
+
+@user_router.get("/")
+def all_users(
+    session: Session = Depends(get_db_session), current_user=Depends(get_current_user)
+) -> list[UserResponse]:
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return get_all_users(session)
