@@ -103,14 +103,14 @@ async def client(db_session):
 
 @pytest.fixture
 def admin_token() -> str:
-    return create_access_token(str(uuid4()), UserRole.ADMIN)
+    return create_access_token(str(uuid4()), "admin", UserRole.ADMIN)
 
 
 @pytest.fixture
 def editor_token() -> str:
-    return create_access_token(str(uuid4()), UserRole.EDITOR)
+    return create_access_token(str(uuid4()), "editor", UserRole.EDITOR)
 
 
 @pytest.fixture
 def viewer_token() -> str:
-    return create_access_token(str(uuid4()), UserRole.VIEWER)
+    return create_access_token(str(uuid4()), "viewer", UserRole.VIEWER)

@@ -25,7 +25,7 @@ def login(
 ) -> Token:
     user = get_user_by_username(session, credentials.username)
     if user and verify_password(credentials.password, user["hashed_password"]):
-        token = create_access_token(user["uid"], UserRole(user["role"]))
+        token = create_access_token(user["uid"], user["username"], UserRole(user["role"]))
         return Token(access_token=token)
     else:
         raise HTTPException(

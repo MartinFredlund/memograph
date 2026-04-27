@@ -59,7 +59,7 @@ def _make_user(db_session, role: UserRole, username: str) -> dict:
     user = create_user(db_session, username, "unused-hash", role)
     return {
         "uid": user["uid"],
-        "token": create_access_token(user["uid"], role),
+        "token": create_access_token(user["uid"], username, role),
     }
 
 
